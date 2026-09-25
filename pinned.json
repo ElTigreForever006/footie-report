@@ -1,0 +1,8 @@
+{
+  "_help": "Your editorial control, Drudge-style. 'lead' overrides the giant red headline (leave title blank for automatic). 'top' adds hand-picked links above the lead. 'block' hides any headline containing one of these phrases. Edit this file on GitHub and the site rebuilds on the next run.",
+  "lead": { "title": "", "url": "", "image": "" },
+  "top": [
+    { "title": "", "url": "", "hot": false }
+  ],
+  "block": []
+}

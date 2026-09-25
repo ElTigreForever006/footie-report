@@ -1,0 +1,51 @@
+{
+  "site_name": "THE FOOTIE REPORT",
+  "tagline": "World football headlines, all day, every day",
+  "domain": "www.footiereport.com",
+  "adsense_client": "",
+  "adsense_slots": { "top": "", "middle": "", "bottom": "" },
+  "google_analytics_id": "",
+  "max_age_hours": 48,
+  "items_per_column": 22,
+  "top_stories_count": 4,
+
+  "hot_words": ["breaking", "sacked", "sack", "fired", "official", "here we go", "confirmed", "banned", "scandal", "shock", "resigns", "record", "red card", "var", "arrested", "charged", "bid", "world record"],
+
+  "columns": {
+    "left": ["Transfers & Rumours", "Premier League"],
+    "center": ["Champions League & Europe", "Spain", "Italy"],
+    "right": ["Germany & France", "Internationals", "Americas & Rest of World"]
+  },
+
+  "feeds": [
+    { "name": "BBC", "url": "https://feeds.bbci.co.uk/sport/football/rss.xml", "section": "Premier League", "priority": 3 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/rss", "section": "Premier League", "priority": 3 },
+    { "name": "Sky Sports", "url": "https://www.skysports.com/rss/12040", "section": "Premier League", "priority": 2 },
+    { "name": "Independent", "url": "https://www.independent.co.uk/sport/football/rss", "section": "Premier League", "priority": 1 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/transfers/rss", "section": "Transfers & Rumours", "priority": 2 },
+    { "name": "talkSPORT", "url": "https://talksport.com/football/feed/", "section": "Transfers & Rumours", "priority": 1 },
+    { "name": "Football365", "url": "https://www.football365.com/feed", "section": "Transfers & Rumours", "priority": 1 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/championsleague/rss", "section": "Champions League & Europe", "priority": 2 },
+    { "name": "ESPN", "url": "https://www.espn.com/espn/rss/soccer/news", "section": "Champions League & Europe", "priority": 2 },
+    { "name": "Marca", "url": "https://e00-marca.uecdn.es/rss/en/football/la-liga.xml", "section": "Spain", "priority": 2 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/laligafootball/rss", "section": "Spain", "priority": 1 },
+    { "name": "Football Italia", "url": "https://www.football-italia.net/feed/", "section": "Italy", "priority": 2 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/serieafootball/rss", "section": "Italy", "priority": 1 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/bundesligafootball/rss", "section": "Germany & France", "priority": 1 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/ligue1football/rss", "section": "Germany & France", "priority": 1 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/world-cup-2026/rss", "section": "Internationals", "priority": 2 },
+    { "name": "Guardian", "url": "https://www.theguardian.com/football/womensfootball/rss", "section": "Internationals", "priority": 1 },
+    { "name": "CBS Sports", "url": "https://www.cbssports.com/rss/headlines/soccer/", "section": "Americas & Rest of World", "priority": 2 },
+    { "name": "MLSsoccer", "url": "https://www.mlssoccer.com/feeds/news", "section": "Americas & Rest of World", "priority": 1 }
+  ],
+
+  "keyword_sections": {
+    "Transfers & Rumours": ["transfer", "signs", "signing", "loan", "fee", "bid", "here we go", "medical", "release clause", "linked", "target"],
+    "Champions League & Europe": ["champions league", "europa league", "conference league", "uefa"],
+    "Spain": ["real madrid", "barcelona", "atletico", "la liga", "laliga", "sevilla", "athletic club"],
+    "Italy": ["serie a", "juventus", "inter milan", "ac milan", "napoli", "roma", "lazio", "atalanta"],
+    "Germany & France": ["bundesliga", "bayern", "dortmund", "leverkusen", "ligue 1", "psg", "paris saint-germain", "marseille", "lyon", "monaco"],
+    "Internationals": ["world cup", "euro 20", "copa america", "nations league", "afcon", "national team", "usmnt", "uswnt", "qualifier"],
+    "Americas & Rest of World": ["mls", "inter miami", "liga mx", "saudi pro league", "brasileirao", "libertadores"]
+  }
+}
