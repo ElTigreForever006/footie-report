@@ -32,5 +32,5 @@ hr { border:0; border-top:3px solid var(--rule); margin:12px 0; }
   color:var(--muted); font:400 11px Arial, sans-serif; letter-spacing:2px; }
 footer { text-align:center; font:400 12px Arial, sans-serif; color:var(--muted); }
 .counter { font:700 13px "Courier New", Courier, monospace; color:var(--ink); letter-spacing:1px; margin:0 0 10px; }
-.counter iframe { border:0; height:1.3em; width:7em; vertical-align:-2px; color-scheme:light dark; }
+.counter #visits { letter-spacing:2px; }
 @media (max-width: 820px) { .cols { grid-template-columns:1fr; } body { font-size:16px; } }

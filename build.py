@@ -265,10 +265,16 @@ def render(cfg, lead, top, sections):
     updated = now.strftime("%a %b %d %Y %H:%M UTC")
     counter_html = ""
     if cfg.get("goatcounter_code"):
-        src = f'https://{e(cfg["goatcounter_code"])}.goatcounter.com/counter/TOTAL.html?no_branding=1'
-        counter_html = (f'<div class="counter">VISITS&nbsp;'
-                        f'<iframe src="{src}" title="visitor count" scrolling="no" frameborder="0" loading="lazy"></iframe>'
-                        f'</div>')
+        # fetch the number and render it in the site's own type; hide the line if the service is unreachable
+        api = f'https://{e(cfg["goatcounter_code"])}.goatcounter.com/counter/TOTAL.json'
+        counter_html = (
+            '<div class="counter" id="counter" hidden>VISITS <span id="visits"></span></div>\n'
+            '<script>fetch(' + repr(api).replace("'", '"') + ')'
+            '.then(function(r){return r.json()})'
+            '.then(function(d){var n=d.count||d.count_unique;if(!n)return;'
+            'document.getElementById("visits").textContent=n;'
+            'document.getElementById("counter").hidden=false;})'
+            '.catch(function(){});</script>')
 
     return f"""<!doctype html>
 <html lang="en">
