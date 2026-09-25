@@ -98,6 +98,7 @@ def parse_feed(raw, feed):
             "source": feed["name"],
             "section": feed["section"],
             "priority": feed.get("priority", 1),
+            "mixed": feed.get("mixed", False),  # feed carries non-football stories too
         })
     return items
 
@@ -138,6 +139,12 @@ def curate(items, cfg, pinned):
     cutoff = now - timedelta(hours=cfg.get("max_age_hours", 48))
     blocked = [b.lower() for b in pinned.get("block", []) if b]
     hot_words = [h.lower() for h in cfg.get("hot_words", [])]
+    reject = [r.lower() for r in cfg.get("reject_terms", [])]
+    football = [f.lower() for f in cfg.get("football_terms", [])]
+    dropped = 0
+
+    def has(term, text):
+        return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", text) is not None
 
     fresh = []
     for it in items:
@@ -145,6 +152,12 @@ def curate(items, cfg, pinned):
             continue
         low = it["title"].lower()
         if any(b in low for b in blocked):
+            continue
+        # other sports never belong here; mixed feeds must prove they're about football
+        if any(has(r, low) for r in reject) or (
+            it.get("mixed") and football and not any(has(f, low) for f in football)
+        ):
+            dropped += 1
             continue
         # keyword routing: a Real Madrid story from a general feed goes to Spain, etc.
         for section, kws in cfg.get("keyword_sections", {}).items():
@@ -156,6 +169,8 @@ def curate(items, cfg, pinned):
         it["score"] = it["priority"] * 2 + (4 if it["hot"] else 0) + max(0, 12 - age_h) / 2
         fresh.append(it)
 
+    if dropped:
+        print(f"Filtered out {dropped} non-football headlines.")
     # dedupe: best-scoring version of each story wins
     fresh.sort(key=lambda x: -x["score"])
     kept, seen_urls = [], set()
@@ -221,6 +236,9 @@ def render(cfg, lead, top, sections):
     if cfg.get("adsense_client"):
         head_scripts += (f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={e(cfg["adsense_client"])}" '
                          f'crossorigin="anonymous"></script>\n')
+    if cfg.get("goatcounter_code"):
+        head_scripts += (f'<script data-goatcounter="https://{e(cfg["goatcounter_code"])}.goatcounter.com/count" '
+                         f'async src="//gc.zgo.at/count.js"></script>\n')
     if cfg.get("google_analytics_id"):
         ga = e(cfg["google_analytics_id"])
         head_scripts += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ga}"></script>'
@@ -245,6 +263,12 @@ def render(cfg, lead, top, sections):
         lead_html = f'<div class="lead">{img}<h1>{link(lead, big=True)}</h1></div>'
     top_html = "\n".join(f"<li>{link(t)}</li>" for t in top)
     updated = now.strftime("%a %b %d %Y %H:%M UTC")
+    counter_html = ""
+    if cfg.get("goatcounter_code"):
+        src = f'https://{e(cfg["goatcounter_code"])}.goatcounter.com/counter/TOTAL.html?no_branding=1'
+        counter_html = (f'<div class="counter">VISITS&nbsp;'
+                        f'<iframe src="{src}" title="visitor count" scrolling="no" frameborder="0" loading="lazy"></iframe>'
+                        f'</div>')
 
     return f"""<!doctype html>
 <html lang="en">
@@ -278,6 +302,7 @@ def render(cfg, lead, top, sections):
 <hr>
 {ad_slot(cfg, "bottom")}
 <footer>
+  {counter_html}
   Headlines link to their original publishers; all stories &copy; their respective owners.
   <br>{e(cfg["site_name"])} &middot; <a href="about.html">About / Contact / Privacy</a>
 </footer>
