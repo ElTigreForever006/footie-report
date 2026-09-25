@@ -86,20 +86,8 @@
       "priority": 1
     },
     {
-      "name": "Football365",
-      "url": "https://www.football365.com/feed/",
-      "section": "Transfers & Rumours",
-      "priority": 1
-    },
-    {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/championsleague/rss",
-      "section": "Champions League & Europe",
-      "priority": 2
-    },
-    {
-      "name": "ESPN",
-      "url": "https://www.espn.co.uk/espn/rss/soccer/news",
       "section": "Champions League & Europe",
       "priority": 2
     },
