@@ -100,7 +100,7 @@
     },
     {
       "name": "TEAMtalk",
-      "url": "https://www.teamtalk.com/feed",
+      "url": "https://www.teamtalk.com/feed/",
       "section": "Transfers & Rumours",
       "priority": 2,
       "pure": true
@@ -141,13 +141,6 @@
       "pure": true
     },
     {
-      "name": "Squawka",
-      "url": "https://www.squawka.com/en/feed/",
-      "section": "Premier League",
-      "priority": 1,
-      "pure": true
-    },
-    {
       "name": "Arseblog",
       "url": "https://arseblog.com/feed/",
       "section": "Premier League",
@@ -165,20 +158,6 @@
       "name": "Soccer News",
       "url": "https://www.soccernews.com/feed",
       "section": "Premier League",
-      "priority": 1,
-      "pure": true
-    },
-    {
-      "name": "OneFootball",
-      "url": "https://onefootball.com/en/rss",
-      "section": "Champions League & Europe",
-      "priority": 1,
-      "pure": true
-    },
-    {
-      "name": "Goal",
-      "url": "https://www.goal.com/feeds/en/news",
-      "section": "Champions League & Europe",
       "priority": 1,
       "pure": true
     },
@@ -219,7 +198,7 @@
     },
     {
       "name": "CalcioMercato",
-      "url": "https://www.calciomercato.com/rss",
+      "url": "https://www.calciomercato.com/rss/",
       "section": "Italy",
       "priority": 1,
       "pure": true
@@ -246,20 +225,6 @@
       "pure": true
     },
     {
-      "name": "Get German Football",
-      "url": "https://www.getgermanfootballnews.com/feed/",
-      "section": "Germany & France",
-      "priority": 1,
-      "pure": true
-    },
-    {
-      "name": "Get French Football",
-      "url": "https://www.getfootballnewsfrance.com/feed/",
-      "section": "Germany & France",
-      "priority": 1,
-      "pure": true
-    },
-    {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/world-cup-2026/rss",
       "section": "Internationals",
@@ -278,13 +243,6 @@
       "url": "https://www.cbssports.com/rss/headlines/soccer/",
       "section": "Americas & Rest of World",
       "priority": 2,
-      "pure": true
-    },
-    {
-      "name": "MLSsoccer",
-      "url": "https://www.mlssoccer.com/rss/news",
-      "section": "Americas & Rest of World",
-      "priority": 1,
       "pure": true
     },
     {
@@ -307,6 +265,34 @@
       "section": "Americas & Rest of World",
       "priority": 1,
       "pure": false
+    },
+    {
+      "name": "Daily Mail",
+      "url": "https://www.dailymail.co.uk/sport/football/index.rss",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Mirror",
+      "url": "https://www.mirror.co.uk/sport/football/?service=rss",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Express",
+      "url": "https://www.express.co.uk/posts/rss/67/football",
+      "section": "Transfers & Rumours",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Guardian",
+      "url": "https://www.theguardian.com/football/europeanfootball/rss",
+      "section": "Champions League & Europe",
+      "priority": 1,
+      "pure": true
     }
   ],
   "keyword_sections": {
