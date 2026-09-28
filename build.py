@@ -93,6 +93,8 @@ def parse_feed(raw, feed):
         title, link = clean(title), (link or "").strip()
         if not title or not link.startswith("http"):
             continue
+        if feed.get("strip_source"):  # Google News appends " - Publisher" to every title
+            title = re.sub(r"\s+-\s+[^-]{2,40}$", "", title).strip()
         items.append({
             "title": title,
             "url": link,
@@ -260,8 +262,14 @@ def curate(items, cfg, pinned):
     blocked = [b.lower() for b in pinned.get("block", []) if b]
     hot_words = [h.lower() for h in cfg.get("hot_words", [])]
     reject = [r.lower() for r in cfg.get("reject_terms", [])]
+    reject_url = {r.lower() for r in cfg.get("reject_url_terms", [])}
     football = [f.lower() for f in cfg.get("football_terms", [])]
     dropped = 0
+
+    def wrong_sport_url(url):
+        # publishers file stories by sport: skysports.com/snooker/..., bbc.co.uk/sport/golf/...
+        path = url.split("//", 1)[-1].split("?", 1)[0]
+        return any(seg.lower() in reject_url for seg in path.split("/") if seg)
 
     def has(term, text):
         return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", text) is not None
@@ -275,7 +283,7 @@ def curate(items, cfg, pinned):
             continue
         # other sports never belong here, and anything off a mixed-sport feed must prove
         # it is about football before it gets in
-        if any(has(r, low) for r in reject) or (
+        if wrong_sport_url(it["url"]) or any(has(r, low) for r in reject) or (
             not it.get("pure") and football and not any(has(f, low) for f in football)
         ):
             dropped += 1

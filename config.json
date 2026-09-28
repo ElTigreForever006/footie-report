@@ -250,21 +250,24 @@
       "url": "https://news.google.com/rss/search?q=MLS+soccer+OR+%22Inter+Miami%22&hl=en-US&gl=US&ceid=US:en",
       "section": "Americas & Rest of World",
       "priority": 1,
-      "pure": false
+      "pure": false,
+      "strip_source": true
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=football+transfer+%22here+we+go%22+OR+%22agreement+reached%22&hl=en-US&gl=US&ceid=US:en",
       "section": "Transfers & Rumours",
       "priority": 1,
-      "pure": false
+      "pure": false,
+      "strip_source": true
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=%22Liga+MX%22+OR+%22Brasileirao%22+OR+%22Saudi+Pro+League%22+football&hl=en-US&gl=US&ceid=US:en",
       "section": "Americas & Rest of World",
       "priority": 1,
-      "pure": false
+      "pure": false,
+      "strip_source": true
     },
     {
       "name": "Daily Mail",
@@ -717,5 +720,49 @@
     "UniMas": "UniMás",
     "beIN": "beIN SPORTS",
     "AppleTV": "Apple TV"
-  }
+  },
+  "reject_url_terms": [
+    "snooker",
+    "golf",
+    "tennis",
+    "cricket",
+    "rugby",
+    "rugby-union",
+    "rugby-league",
+    "boxing",
+    "mma",
+    "ufc",
+    "f1",
+    "formula1",
+    "formula-1",
+    "motorsport",
+    "motogp",
+    "nascar",
+    "nfl",
+    "american-football",
+    "college-football",
+    "nba",
+    "basketball",
+    "mlb",
+    "baseball",
+    "nhl",
+    "ice-hockey",
+    "darts",
+    "cycling",
+    "horse-racing",
+    "racing-post",
+    "athletics",
+    "swimming",
+    "netball",
+    "gaa",
+    "hurling",
+    "olympics",
+    "winter-olympics",
+    "paralympics",
+    "esports",
+    "wwe",
+    "wrestling",
+    "padel",
+    "squash"
+  ]
 }
