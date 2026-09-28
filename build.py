@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
@@ -25,6 +26,8 @@ NS = {
     "media": "http://search.yahoo.com/mrss/",
 }
 MIN_ITEMS = 15  # below this we fail the build so the last good deploy stays live
+ESPN_SCORE = "https://site.api.espn.com/apis/site/v2/sports/soccer/{code}/scoreboard?dates={date}"
+ESPN_STAND = "https://site.api.espn.com/apis/v2/sports/soccer/{code}/standings"
 
 
 # ---------------------------------------------------------------- fetching
@@ -98,7 +101,7 @@ def parse_feed(raw, feed):
             "source": feed["name"],
             "section": feed["section"],
             "priority": feed.get("priority", 1),
-            "mixed": feed.get("mixed", False),  # feed carries non-football stories too
+            "pure": feed.get("pure", False),  # football-only feed: skip the football-word check
         })
     return items
 
@@ -120,6 +123,123 @@ def load_all(cfg, fixtures=None):
         for got in pool.map(one, enumerate(cfg["feeds"])):
             out.extend(got)
     return out
+
+
+# ---------------------------------------------------------------- fixtures & tables (ESPN public endpoints)
+def fetch_json(url, timeout=12):
+    return json.loads(fetch(url, timeout))
+
+
+def tz_of(cfg):
+    try:
+        return ZoneInfo(cfg.get("timezone", "America/New_York"))
+    except Exception:
+        return timezone.utc
+
+
+def channel_label(name, cfg):
+    return (cfg.get("channel_names") or {}).get(name, name)
+
+
+def get_fixtures(cfg):
+    """Matches over the next few days, with US broadcasters and local kickoff times."""
+    tz = tz_of(cfg)
+    today = datetime.now(tz)
+    days = [today + timedelta(days=i) for i in range(max(1, cfg.get("tv_days", 3)))]
+    wanted = {d.date() for d in days}
+    seen, out = set(), []
+    for lg in cfg.get("leagues", []):
+        if not lg.get("tv", True):
+            continue
+        for d in days:
+            url = ESPN_SCORE.format(code=lg["code"], date=d.strftime("%Y%m%d"))
+            try:
+                data = fetch_json(url)
+            except Exception as ex:
+                print(f"  TV   FAIL {lg['name']} {d:%Y-%m-%d} ({type(ex).__name__})")
+                continue
+            for ev in data.get("events", []):
+                comp = (ev.get("competitions") or [{}])[0]
+                kick = parse_date(ev.get("date"))
+                if not kick:
+                    continue
+                local = kick.astimezone(tz)
+                if local.date() not in wanted:
+                    continue
+                sides = {c.get("homeAway"): c for c in comp.get("competitors", [])}
+                home, away = sides.get("home") or {}, sides.get("away") or {}
+                hname = (home.get("team") or {}).get("shortDisplayName", "")
+                aname = (away.get("team") or {}).get("shortDisplayName", "")
+                if not hname or not aname:
+                    continue
+                key = (local.isoformat(), hname, aname)
+                if key in seen:
+                    continue
+                seen.add(key)
+                chans, tvs = [], []
+                for g in comp.get("geoBroadcasts", []):
+                    n = (g.get("media") or {}).get("shortName")
+                    if n:
+                        chans.append(n)
+                if not chans:
+                    for b in comp.get("broadcasts", []):
+                        chans.extend(b.get("names", []))
+                for n in chans:
+                    lab = channel_label(n, cfg)
+                    if lab not in tvs:
+                        tvs.append(lab)
+                state = ((ev.get("status") or {}).get("type") or {})
+                out.append({
+                    "kick": local,
+                    "league": lg["name"],
+                    "home": hname,
+                    "away": aname,
+                    "tv": ", ".join(tvs),
+                    "state": state.get("state", "pre"),
+                    "detail": state.get("shortDetail", ""),
+                    "score": f'{away.get("score", "")}-{home.get("score", "")}'
+                             if state.get("state") in ("in", "post") else "",
+                })
+    out.sort(key=lambda x: x["kick"])
+    print(f"Fixtures: {len(out)} across {cfg.get('tv_days', 3)} days.")
+    return out
+
+
+def get_tables(cfg):
+    """Current standings per league."""
+    tables = []
+    for lg in cfg.get("leagues", []):
+        if not lg.get("table"):
+            continue
+        try:
+            data = fetch_json(ESPN_STAND.format(code=lg["code"]))
+        except Exception as ex:
+            print(f"  TBL  FAIL {lg['name']} ({type(ex).__name__})")
+            continue
+        entries = None
+        for child in data.get("children") or []:
+            entries = ((child.get("standings") or {}).get("entries")) or entries
+            if entries:
+                break
+        if not entries:
+            entries = (data.get("standings") or {}).get("entries")
+        if not entries:
+            continue
+        rows = []
+        for en in entries:
+            stats = {s.get("name"): s for s in en.get("stats", [])}
+            def val(name):
+                s = stats.get(name) or {}
+                return s.get("displayValue") or ("" if s.get("value") is None else str(s.get("value")))
+            rows.append({
+                "team": (en.get("team") or {}).get("shortDisplayName", ""),
+                "gp": val("gamesPlayed"), "w": val("wins"), "d": val("ties"), "l": val("losses"),
+                "gd": val("pointDifferential"), "pts": val("points"),
+            })
+        if rows:
+            tables.append({"name": lg["name"], "rows": rows})
+    print(f"Tables: {len(tables)} leagues.")
+    return tables
 
 
 # ---------------------------------------------------------------- editorial logic
@@ -153,9 +273,10 @@ def curate(items, cfg, pinned):
         low = it["title"].lower()
         if any(b in low for b in blocked):
             continue
-        # other sports never belong here; mixed feeds must prove they're about football
+        # other sports never belong here, and anything off a mixed-sport feed must prove
+        # it is about football before it gets in
         if any(has(r, low) for r in reject) or (
-            it.get("mixed") and football and not any(has(f, low) for f in football)
+            not it.get("pure") and football and not any(has(f, low) for f in football)
         ):
             dropped += 1
             continue
@@ -230,7 +351,66 @@ def ad_slot(cfg, name):
             f'<script>(adsbygoogle=window.adsbygoogle||[]).push({{}});</script></div>')
 
 
-def render(cfg, lead, top, sections):
+def render_tv(fixtures, cfg):
+    if not fixtures:
+        return ""
+    tz = tz_of(cfg)
+    today = datetime.now(tz).date()
+    blocks = []
+    for day in sorted({f["kick"].date() for f in fixtures}):
+        label = "TODAY" if day == today else ("TOMORROW" if day == today + timedelta(days=1)
+                                              else day.strftime("%A %b %-d").upper())
+        rows = []
+        for f in (x for x in fixtures if x["kick"].date() == day):
+            when = f["detail"] if f["state"] == "in" else (
+                "FT" if f["state"] == "post" else f["kick"].strftime("%-I:%M %p"))
+            score = f' <b>{e(f["score"])}</b>' if f["score"] else ""
+            rows.append(
+                f'<tr><td class="t">{e(when)}</td>'
+                f'<td class="m">{e(f["away"])} at {e(f["home"])}{score}</td>'
+                f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
+        blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
+    zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
+    return (f'<section class="tv"><h2>ON TV {e(zone)}</h2>{"".join(blocks)}'
+            f'<p class="note">US listings. Times {e(zone) or "local"}.</p></section>')
+
+
+def render_tables(tables, cfg, limit=None):
+    if not tables:
+        return ""
+    out = []
+    for t in tables:
+        rows = t["rows"] if limit is None else t["rows"][:limit]
+        body = "".join(
+            f'<tr><td class="p">{i}</td><td class="n">{e(r["team"])}</td>'
+            f'<td>{e(r["gp"])}</td><td>{e(r["gd"])}</td><td class="pts">{e(r["pts"])}</td></tr>'
+            for i, r in enumerate(rows, 1))
+        out.append(f'<div class="table"><h3>{e(t["name"])}</h3>'
+                   f'<table><tr class="hd"><td></td><td></td><td>P</td><td>GD</td><td>PTS</td></tr>{body}</table></div>')
+    more = '<p class="note"><a href="tables.html">Full tables &rarr;</a></p>' if limit else ""
+    return f'<section class="tables"><h2>LEAGUE TABLES</h2><div class="tablegrid">{"".join(out)}</div>{more}</section>'
+
+
+def tables_page(cfg, tables):
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>League tables &middot; {e(cfg["site_name"])}</title>
+<meta name="description" content="Current standings for the top European leagues and MLS.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<p><a href="/">&larr; Back to headlines</a></p>
+{render_tables(tables, cfg)}
+<footer>Standings via ESPN. {e(cfg["site_name"])}</footer>
+</body>
+</html>
+"""
+
+
+def render(cfg, lead, top, sections, fixtures=None, tables=None):
     now = datetime.now(timezone.utc)
     head_scripts = ""
     if cfg.get("adsense_client"):
@@ -300,12 +480,14 @@ def render(cfg, lead, top, sections):
   <div class="tagline">{e(cfg["tagline"])} &middot; <span id="upd">Updated {updated}</span></div>
 </header>
 <hr>
+{render_tv(fixtures or [], cfg)}
 <main class="cols">
   <div class="col">{column(cols["left"])}</div>
   <div class="col">{column(cols["center"])}</div>
   <div class="col">{column(cols["right"])}</div>
 </main>
 <hr>
+{render_tables(tables or [], cfg, limit=cfg.get("table_rows_front", 6))}
 {ad_slot(cfg, "bottom")}
 <footer>
   {counter_html}
@@ -328,6 +510,17 @@ def main():
     print("Fetching feeds…")
     items = load_all(cfg, args.fixtures)
     lead, top, sections = curate(items, cfg, pinned)
+    # fixtures/tables are extras: never let them break the headline build
+    games, tables = [], []
+    if not args.fixtures:
+        try:
+            games = get_fixtures(cfg)
+        except Exception as ex:
+            print(f"Fixtures unavailable ({type(ex).__name__}: {ex})")
+        try:
+            tables = get_tables(cfg)
+        except Exception as ex:
+            print(f"Tables unavailable ({type(ex).__name__}: {ex})")
     total = sum(len(v) for v in sections.values()) + len(top) + (1 if lead else 0)
     print(f"Curated {total} headlines from {len(items)} raw items.")
     if total < MIN_ITEMS:
@@ -335,7 +528,9 @@ def main():
         sys.exit(1)
 
     DIST.mkdir(exist_ok=True)
-    (DIST / "index.html").write_text(render(cfg, lead, top, sections))
+    (DIST / "index.html").write_text(render(cfg, lead, top, sections, games, tables))
+    if tables:
+        (DIST / "tables.html").write_text(tables_page(cfg, tables))
     for f in (ROOT / "static").iterdir():
         (DIST / f.name).write_bytes(f.read_bytes())
     if cfg.get("domain") and "example.com" not in cfg["domain"]:

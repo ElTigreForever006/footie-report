@@ -53,126 +53,260 @@
       "name": "BBC",
       "url": "https://feeds.bbci.co.uk/sport/football/rss.xml",
       "section": "Premier League",
-      "priority": 3
+      "priority": 3,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/rss",
       "section": "Premier League",
-      "priority": 3
+      "priority": 3,
+      "pure": true
     },
     {
       "name": "Sky Sports",
       "url": "https://www.skysports.com/rss/12040",
       "section": "Premier League",
-      "priority": 2
+      "priority": 2,
+      "pure": true
     },
     {
-      "name": "90min",
-      "url": "https://www.90min.com/posts.rss",
-      "section": "Premier League",
-      "priority": 1,
-      "mixed": true
+      "name": "Sky Sports",
+      "url": "https://www.skysports.com/rss/11095",
+      "section": "Transfers & Rumours",
+      "priority": 2,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/transfer-window/rss",
       "section": "Transfers & Rumours",
-      "priority": 2
+      "priority": 2,
+      "pure": true
     },
     {
       "name": "talkSPORT",
       "url": "https://talksport.com/football/feed/",
       "section": "Transfers & Rumours",
       "priority": 1,
-      "mixed": true
+      "pure": false
+    },
+    {
+      "name": "90min",
+      "url": "https://www.90min.com/posts.rss",
+      "section": "Transfers & Rumours",
+      "priority": 1,
+      "pure": false
+    },
+    {
+      "name": "TEAMtalk",
+      "url": "https://www.teamtalk.com/feed",
+      "section": "Transfers & Rumours",
+      "priority": 2,
+      "pure": true
+    },
+    {
+      "name": "CaughtOffside",
+      "url": "https://www.caughtoffside.com/feed/",
+      "section": "Transfers & Rumours",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "FootTheBall",
+      "url": "https://www.foottheball.com/feed/",
+      "section": "Transfers & Rumours",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "101 Great Goals",
+      "url": "https://www.101greatgoals.com/feed/",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "FourFourTwo",
+      "url": "https://www.fourfourtwo.com/feeds/rss",
+      "section": "Premier League",
+      "priority": 2,
+      "pure": true
+    },
+    {
+      "name": "FootballFanCast",
+      "url": "https://www.footballfancast.com/feed",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Squawka",
+      "url": "https://www.squawka.com/en/feed/",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Arseblog",
+      "url": "https://arseblog.com/feed/",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "This Is Anfield",
+      "url": "https://www.thisisanfield.com/feed/",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Soccer News",
+      "url": "https://www.soccernews.com/feed",
+      "section": "Premier League",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "OneFootball",
+      "url": "https://onefootball.com/en/rss",
+      "section": "Champions League & Europe",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Goal",
+      "url": "https://www.goal.com/feeds/en/news",
+      "section": "Champions League & Europe",
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/championsleague/rss",
       "section": "Champions League & Europe",
-      "priority": 2
+      "priority": 2,
+      "pure": true
+    },
+    {
+      "name": "Marca",
+      "url": "https://e00-marca.uecdn.es/rss/en/football.xml",
+      "section": "Spain",
+      "priority": 2,
+      "pure": true
     },
     {
       "name": "Football Espana",
       "url": "https://www.football-espana.net/feed/",
       "section": "Spain",
-      "priority": 2
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/laligafootball/rss",
       "section": "Spain",
-      "priority": 1
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Football Italia",
       "url": "https://www.football-italia.net/feed/",
       "section": "Italy",
-      "priority": 2
+      "priority": 2,
+      "pure": true
+    },
+    {
+      "name": "CalcioMercato",
+      "url": "https://www.calciomercato.com/rss",
+      "section": "Italy",
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/serieafootball/rss",
       "section": "Italy",
-      "priority": 1
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/bundesligafootball/rss",
       "section": "Germany & France",
-      "priority": 1
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/ligue1football/rss",
       "section": "Germany & France",
-      "priority": 1
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Get German Football",
+      "url": "https://www.getgermanfootballnews.com/feed/",
+      "section": "Germany & France",
+      "priority": 1,
+      "pure": true
+    },
+    {
+      "name": "Get French Football",
+      "url": "https://www.getfootballnewsfrance.com/feed/",
+      "section": "Germany & France",
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/world-cup-2026/rss",
       "section": "Internationals",
-      "priority": 2
+      "priority": 2,
+      "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/womensfootball/rss",
       "section": "Internationals",
-      "priority": 1
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "CBS Sports",
       "url": "https://www.cbssports.com/rss/headlines/soccer/",
       "section": "Americas & Rest of World",
-      "priority": 2
+      "priority": 2,
+      "pure": true
+    },
+    {
+      "name": "MLSsoccer",
+      "url": "https://www.mlssoccer.com/rss/news",
+      "section": "Americas & Rest of World",
+      "priority": 1,
+      "pure": true
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=MLS+soccer+OR+%22Inter+Miami%22&hl=en-US&gl=US&ceid=US:en",
       "section": "Americas & Rest of World",
       "priority": 1,
-      "mixed": true
-    },
-    {
-      "name": "Sky Sports",
-      "url": "https://www.skysports.com/rss/11095",
-      "section": "Transfers & Rumours",
-      "priority": 2
+      "pure": false
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=football+transfer+%22here+we+go%22+OR+%22agreement+reached%22&hl=en-US&gl=US&ceid=US:en",
       "section": "Transfers & Rumours",
       "priority": 1,
-      "mixed": true
+      "pure": false
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=%22Liga+MX%22+OR+%22Brasileirao%22+OR+%22Saudi+Pro+League%22+football&hl=en-US&gl=US&ceid=US:en",
       "section": "Americas & Rest of World",
       "priority": 1,
-      "mixed": true
+      "pure": false
     }
   ],
   "keyword_sections": {
@@ -249,37 +383,86 @@
   "goatcounter_code": "footiereport",
   "reject_terms": [
     "nfl",
-    "nba",
-    "mlb",
-    "nhl",
-    "super bowl",
+    "nfl draft",
+    "college football",
     "american football",
-    "cricket",
-    "rugby",
+    "super bowl",
+    "quarterback",
+    "touchdown",
+    "wide receiver",
+    "tight end",
+    "running back",
+    "kansas city chiefs",
+    "dallas cowboys",
+    "san francisco 49ers",
+    "new england patriots",
+    "green bay packers",
+    "philadelphia eagles",
+    "buffalo bills",
+    "ncaa",
+    "heisman",
+    "gridiron",
+    "cfb",
+    "nba",
+    "wnba",
+    "ncaab",
+    "mlb",
+    "world series",
+    "yankees",
+    "dodgers",
+    "nhl",
+    "stanley cup",
+    "basketball",
+    "baseball",
+    "ice hockey",
+    "golf",
+    "pga",
+    "pga tour",
+    "liv golf",
+    "ryder cup",
+    "birdie",
+    "bogey",
+    "tee time",
+    "the masters",
+    "open championship",
+    "tennis",
+    "atp",
+    "wta",
+    "wimbledon",
+    "us open",
+    "french open",
+    "australian open",
+    "grand slam",
+    "formula 1",
+    "formula one",
+    "grand prix",
+    "nascar",
+    "indycar",
+    "motogp",
+    "rally",
     "boxing",
     "ufc",
     "mma",
-    "darts",
-    "snooker",
-    "golf",
-    "tennis",
-    "formula 1",
-    "f1",
-    "nascar",
-    "indycar",
-    "wwe",
+    "knockout",
+    "heavyweight title",
     "wrestling",
+    "wwe",
     "horse racing",
     "racing tips",
+    "greyhound",
+    "cricket",
+    "test match",
+    "the ashes",
+    "ipl",
+    "rugby",
+    "six nations",
+    "darts",
+    "snooker",
     "cycling",
     "tour de france",
     "athletics",
     "swimming",
-    "basketball",
-    "baseball",
-    "ice hockey",
     "netball",
-    "gaa",
     "hurling",
     "esports",
     "poker",
@@ -288,10 +471,8 @@
     "bet builder",
     "accumulator",
     "acca",
-    "greyhound",
-    "motogp",
-    "rally",
-    "cage fight"
+    "best odds",
+    "free bets"
   ],
   "football_terms": [
     "football",
@@ -430,6 +611,125 @@
     "bellingham",
     "salah",
     "vinicius",
-    "yamal"
-  ]
+    "yamal",
+    "fc",
+    "afc",
+    "united",
+    "city",
+    "club",
+    "league",
+    "cup",
+    "fixture",
+    "fixtures",
+    "matchday",
+    "match",
+    "kick-off",
+    "kickoff",
+    "manager",
+    "coach",
+    "boss",
+    "transfer window",
+    "deadline day",
+    "academy",
+    "youth team",
+    "caps",
+    "cap",
+    "substitute",
+    "premier",
+    "efl",
+    "fa cup",
+    "carabao",
+    "copa del rey",
+    "coppa italia",
+    "dfb-pokal",
+    "supercopa",
+    "super cup",
+    "wsl",
+    "nwsl",
+    "liga mx",
+    "a-league",
+    "j-league",
+    "k league",
+    "eredivisie",
+    "primeira",
+    "süper lig",
+    "super lig",
+    "usmnt",
+    "uswnt",
+    "fifa",
+    "uefa",
+    "concacaf",
+    "conmebol",
+    "caf",
+    "afc asian cup",
+    "gold cup",
+    "libertadores"
+  ],
+  "timezone": "America/New_York",
+  "tv_days": 3,
+  "table_rows_front": 6,
+  "leagues": [
+    {
+      "code": "eng.1",
+      "name": "Premier League",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "esp.1",
+      "name": "La Liga",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "ita.1",
+      "name": "Serie A",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "ger.1",
+      "name": "Bundesliga",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "fra.1",
+      "name": "Ligue 1",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "uefa.champions",
+      "name": "Champions League",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "usa.1",
+      "name": "MLS",
+      "tv": true,
+      "table": true
+    }
+  ],
+  "channel_names": {
+    "USA Net": "USA Network",
+    "Tele": "Telemundo",
+    "Uni": "Universo",
+    "Peacock": "Peacock",
+    "NBC": "NBC",
+    "NBCSN": "NBCSN",
+    "CBSSN": "CBS Sports Net",
+    "Paramount+": "Paramount+",
+    "PARA+": "Paramount+",
+    "ESPN+": "ESPN+",
+    "ESPN2": "ESPN2",
+    "FS1": "FS1",
+    "FS2": "FS2",
+    "FOX": "FOX",
+    "TUDN": "TUDN",
+    "UniMas": "UniMás",
+    "beIN": "beIN SPORTS",
+    "AppleTV": "Apple TV"
+  }
 }
