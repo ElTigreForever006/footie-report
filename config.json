@@ -655,7 +655,7 @@
     "libertadores"
   ],
   "timezone": "America/New_York",
-  "tv_days": 5,
+  "tv_days": 3,
   "table_rows_front": 6,
   "leagues": [
     {
@@ -695,10 +695,76 @@
       "table": false
     },
     {
+      "code": "uefa.europa",
+      "name": "Europa League",
+      "tv": true,
+      "table": false
+    },
+    {
       "code": "usa.1",
       "name": "MLS",
       "tv": true,
       "table": true
+    },
+    {
+      "code": "mex.1",
+      "name": "Liga MX",
+      "tv": true,
+      "table": true
+    },
+    {
+      "code": "eng.2",
+      "name": "Championship",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "uefa.nations",
+      "name": "Nations League",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "concacaf.nations.league",
+      "name": "CONCACAF Nations League",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "fifa.friendly",
+      "name": "International friendly",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "fifa.worldq.uefa",
+      "name": "World Cup qualifying (UEFA)",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "fifa.worldq.concacaf",
+      "name": "World Cup qualifying (CONCACAF)",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "usa.nwsl",
+      "name": "NWSL",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "eng.w.1",
+      "name": "Women's Super League",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "fifa.friendly.w",
+      "name": "International friendly (women)",
+      "tv": true,
+      "table": false
     }
   ],
   "channel_names": {

@@ -149,17 +149,19 @@ def get_fixtures(cfg):
     today = datetime.now(tz)
     days = [today + timedelta(days=i) for i in range(max(1, cfg.get("tv_days", 3)))]
     wanted = {d.date() for d in days}
+    jobs = [(lg, d) for lg in cfg.get("leagues", []) if lg.get("tv", True) for d in days]
+
+    def grab(job):
+        lg, d = job
+        try:
+            return lg, fetch_json(ESPN_SCORE.format(code=lg["code"], date=d.strftime("%Y%m%d")))
+        except Exception as ex:
+            print(f"  TV   FAIL {lg['name']} {d:%Y-%m-%d} ({type(ex).__name__})")
+            return lg, {}
+
     seen, out = set(), []
-    for lg in cfg.get("leagues", []):
-        if not lg.get("tv", True):
-            continue
-        for d in days:
-            url = ESPN_SCORE.format(code=lg["code"], date=d.strftime("%Y%m%d"))
-            try:
-                data = fetch_json(url)
-            except Exception as ex:
-                print(f"  TV   FAIL {lg['name']} {d:%Y-%m-%d} ({type(ex).__name__})")
-                continue
+    with cf.ThreadPoolExecutor(max_workers=12) as pool:
+        for lg, data in pool.map(grab, jobs):
             for ev in data.get("events", []):
                 comp = (ev.get("competitions") or [{}])[0]
                 kick = parse_date(ev.get("date"))
