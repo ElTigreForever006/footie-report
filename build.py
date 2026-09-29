@@ -380,7 +380,8 @@ def render_tv(fixtures, cfg):
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
     zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
     return (f'<section class="tv"><h2>ON TV {e(zone)}</h2>{"".join(blocks)}'
-            f'<p class="note">US listings. Times {e(zone) or "local"}.</p></section>')
+            f'<p class="note">US listings, times {e(zone) or "local"} &middot; '
+            f'<a href="/how-to-watch.html">Full week and channels &rarr;</a></p></section>')
 
 
 def render_tables(tables, cfg, limit=None):
@@ -397,6 +398,113 @@ def render_tables(tables, cfg, limit=None):
                    f'<table><tr class="hd"><td></td><td></td><td>P</td><td>GD</td><td>PTS</td></tr>{body}</table></div>')
     more = '<p class="note"><a href="tables.html">Full tables &rarr;</a></p>' if limit else ""
     return f'<section class="tables"><h2>LEAGUE TABLES</h2><div class="tablegrid">{"".join(out)}</div>{more}</section>'
+
+
+def slugify(text):
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", text.lower())).strip("-")
+
+
+def zone_times(kick, cfg):
+    """Kickoff in the four US time zones, e.g. '3:00 PM ET / 12:00 PM PT'."""
+    out = []
+    for name, tz in (("ET", "America/New_York"), ("CT", "America/Chicago"),
+                     ("MT", "America/Denver"), ("PT", "America/Los_Angeles")):
+        try:
+            out.append(f'{kick.astimezone(ZoneInfo(tz)).strftime("%-I:%M %p")} {name}')
+        except Exception:
+            continue
+    return " / ".join(out)
+
+
+def page_shell(cfg, title, description, body, canonical=""):
+    can = f'<link rel="canonical" href="https://{e(cfg["domain"])}/{e(canonical)}">' if cfg.get("domain") else ""
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{e(title)}</title>
+<meta name="description" content="{e(description)}">
+{can}
+<meta property="og:title" content="{e(title)}">
+<meta property="og:description" content="{e(description)}">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<p class="crumb"><a href="/">&larr; {e(cfg["site_name"])}</a></p>
+{body}
+<footer>Listings are for the United States and can change; check your provider.
+<br>{e(cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+</body>
+</html>
+"""
+
+
+def watch_pages(cfg, fixtures):
+    """A weekly US TV schedule plus one page per fixture — the pages people search for."""
+    if not fixtures:
+        return {}
+    tz = tz_of(cfg)
+    today = datetime.now(tz).date()
+    pages, rows_by_day = {}, {}
+    for f in fixtures:
+        rows_by_day.setdefault(f["kick"].date(), []).append(f)
+
+    blocks = []
+    for day in sorted(rows_by_day):
+        label = "Today" if day == today else ("Tomorrow" if day == today + timedelta(days=1)
+                                              else day.strftime("%A, %B %-d"))
+        rows = []
+        for f in rows_by_day[day]:
+            match = f'{f["away"]} at {f["home"]}'
+            slug = f'{slugify(f["away"])}-vs-{slugify(f["home"])}-{f["kick"]:%Y-%m-%d}'
+            rows.append(
+                f'<tr><td class="t">{e(f["kick"].strftime("%-I:%M %p"))}</td>'
+                f'<td class="m"><a href="/watch/{e(slug)}.html">{e(match)}</a> '
+                f'<span class="src">{e(f["league"])}</span></td>'
+                f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
+            pages[f"watch/{slug}.html"] = match_page(cfg, f, slug)
+        blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
+
+    body = (f'<section class="tv"><h1>Soccer on US TV this week</h1>'
+            f'<p class="lede">Every match with a US broadcaster, with kickoff times in Eastern. '
+            f'Click a match for times in every US time zone.</p>{"".join(blocks)}</section>')
+    pages["how-to-watch.html"] = page_shell(
+        cfg, "Soccer on TV in the US this week: times and channels",
+        "Full schedule of Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League and MLS "
+        "matches on US television this week, with kickoff times and channels.",
+        body, "how-to-watch.html")
+    return pages
+
+
+def match_page(cfg, f, slug):
+    match = f'{f["away"]} vs {f["home"]}'
+    title = f'How to watch {match} in the US: TV channel, live stream and kickoff time'
+    tv = f["tv"] or "no US broadcaster listed yet"
+    when = f["kick"].strftime("%A, %B %-d")
+    desc = (f'{match} kicks off at {f["kick"].strftime("%-I:%M %p")} ET on {when}'
+            f'{" and is on " + f["tv"] if f["tv"] else ""}. Kickoff times for every US time zone.')
+    body = f"""<article class="match">
+<h1>How to watch {e(match)} in the US</h1>
+<table class="detail">
+<tr><td>Match</td><td>{e(match)} &middot; {e(f["league"])}</td></tr>
+<tr><td>Date</td><td>{e(when)}</td></tr>
+<tr><td>Kickoff</td><td>{e(zone_times(f["kick"], cfg))}</td></tr>
+<tr><td>US TV / stream</td><td>{e(tv)}</td></tr>
+</table>
+<p class="note">Times and channels come from the published schedule and can change.
+See the <a href="/how-to-watch.html">full week of fixtures</a> or
+<a href="/">today's football headlines</a>.</p>
+</article>"""
+    return page_shell(cfg, title, desc, body, f"watch/{slug}.html")
+
+
+def sitemap(cfg, extra_paths):
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    urls = ["", "tables.html", "about.html"] + list(extra_paths)
+    body = "".join(
+        f'<url><loc>https://{e(cfg["domain"])}/{e(p)}</loc><lastmod>{now}</lastmod></url>' for p in urls)
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>\n'
 
 
 def tables_page(cfg, tables):
@@ -539,6 +647,14 @@ def main():
     (DIST / "index.html").write_text(render(cfg, lead, top, sections, games, tables))
     if tables:
         (DIST / "tables.html").write_text(tables_page(cfg, tables))
+    pages = watch_pages(cfg, games)
+    for path, html in pages.items():
+        out = DIST / path
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(html)
+    if pages:
+        print(f"Wrote {len(pages)} how-to-watch pages.")
+    (DIST / "sitemap.xml").write_text(sitemap(cfg, pages.keys()))
     for f in (ROOT / "static").iterdir():
         (DIST / f.name).write_bytes(f.read_bytes())
     if cfg.get("domain") and "example.com" not in cfg["domain"]:
@@ -546,7 +662,8 @@ def main():
     if cfg.get("adsense_client"):
         pub = cfg["adsense_client"].replace("ca-", "")
         (DIST / "ads.txt").write_text(f"google.com, {pub}, DIRECT, f08c47fec0942fa0\n")
-    (DIST / "robots.txt").write_text(f"User-agent: *\nAllow: /\n")
+    (DIST / "robots.txt").write_text(
+        f"User-agent: *\nAllow: /\nSitemap: https://{cfg.get('domain', '')}/sitemap.xml\n")
     print("Wrote dist/index.html")
 
 

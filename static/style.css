@@ -50,6 +50,16 @@ hr { border:0; border-top:3px solid var(--rule); margin:12px 0; }
 .tables td.n { width:auto; max-width:9em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .tables td:not(.n):not(.p) { text-align:right; width:2.6em; }
 .tables td.pts { font-weight:900; }
+.crumb { font:700 13px "Courier New", Courier, monospace; margin:4px 0 14px; }
+.lede { max-width:720px; margin:0 auto 14px; font:400 15px/1.5 Georgia, serif; color:var(--muted); text-align:center; }
+.tv h1, .match h1 { font:900 clamp(22px,3.4vw,32px)/1.15 "Arial Black", Arial, sans-serif; text-transform:uppercase;
+  text-align:center; max-width:820px; margin:8px auto 10px; }
+.tv .m a { text-decoration:underline; }
+.match { max-width:620px; margin:0 auto; }
+.detail { width:100%; border-collapse:collapse; font:700 15px/1.4 "Courier New", Courier, monospace; }
+.detail td { padding:7px 6px; border-bottom:1px dotted var(--rule); }
+.detail td:first-child { width:9em; font:400 11px Arial, sans-serif; color:var(--muted);
+  text-transform:uppercase; letter-spacing:1px; }
 .note { text-align:center; font:400 11px Arial, sans-serif; color:var(--muted); margin:6px 0 0; }
 footer { text-align:center; font:400 12px Arial, sans-serif; color:var(--muted); }
 .counter { font:700 13px "Courier New", Courier, monospace; color:var(--ink); letter-spacing:1px; margin:0 0 10px; }
