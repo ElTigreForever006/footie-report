@@ -174,12 +174,11 @@ def get_fixtures(cfg):
                 home, away = sides.get("home") or {}, sides.get("away") or {}
                 hname = (home.get("team") or {}).get("shortDisplayName", "")
                 aname = (away.get("team") or {}).get("shortDisplayName", "")
-                if not hname or not aname:
+                if not hname or not aname or "TBD" in hname or "TBD" in aname:
                     continue
                 key = (local.isoformat(), hname, aname)
                 if key in seen:
                     continue
-                seen.add(key)
                 chans, tvs = [], []
                 for g in comp.get("geoBroadcasts", []):
                     n = (g.get("media") or {}).get("shortName")
@@ -192,6 +191,9 @@ def get_fixtures(cfg):
                     lab = channel_label(n, cfg)
                     if lab not in tvs:
                         tvs.append(lab)
+                if not tvs:          # no US broadcaster: nothing for a reader to watch
+                    continue
+                seen.add(key)
                 state = ((ev.get("status") or {}).get("type") or {})
                 out.append({
                     "kick": local,
