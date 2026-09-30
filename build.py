@@ -95,12 +95,19 @@ def parse_feed(raw, feed):
             continue
         if feed.get("strip_source"):  # Google News appends " - Publisher" to every title
             title = re.sub(r"\s+-\s+[^-]{2,40}$", "", title).strip()
+        # Google News wraps every link in a news.google.com redirect and names itself as the
+        # feed; the real publisher is in <source url="...">Name</source>. Credit them instead.
+        source = feed["name"]
+        if feed.get("strip_source"):
+            src_el = e.find("source")
+            if src_el is not None and (src_el.text or "").strip():
+                source = clean(src_el.text)
         items.append({
             "title": title,
             "url": link,
             "date": parse_date(date),
             "image": find_image(e),
-            "source": feed["name"],
+            "source": source,
             "section": feed["section"],
             "priority": feed.get("priority", 1),
             "pure": feed.get("pure", False),  # football-only feed: skip the football-word check
