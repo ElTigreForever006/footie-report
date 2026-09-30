@@ -316,10 +316,11 @@ def curate(items, cfg, pinned):
     # lead story
     lead_pin = pinned.get("lead") or {}
     if lead_pin.get("title") and lead_pin.get("url"):
-        lead = {"title": lead_pin["title"], "url": lead_pin["url"], "image": lead_pin.get("image") or None, "source": "", "hot": True}
+        lead = {"title": lead_pin["title"], "url": lead_pin["url"], "image": None, "source": "", "hot": True}
     else:
-        with_img = [k for k in kept[:10] if k["image"]]
-        lead = with_img[0] if with_img else (kept[0] if kept else None)
+        # no image preference: publishers' photos are not ours to display, so the
+        # lead is simply the strongest story (see render() -- images are not emitted)
+        lead = kept[0] if kept else None
     if lead in kept:
         kept.remove(lead)
 
@@ -559,8 +560,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
     cols = cfg["columns"]
     lead_html = ""
     if lead:
-        img = f'<a href="{e(lead["url"])}" target="_blank" rel="noopener"><img src="{e(lead["image"])}" alt="" loading="eager"></a>' if lead.get("image") else ""
-        lead_html = f'<div class="lead">{img}<h1>{link(lead, big=True)}</h1></div>'
+        lead_html = f'<div class="lead"><h1>{link(lead, big=True)}</h1></div>'
     top_html = "\n".join(f"<li>{link(t)}</li>" for t in top)
     updated = now.strftime("%a %b %d %Y %H:%M UTC")
     counter_html = ""
@@ -587,7 +587,6 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <link rel="canonical" href="https://{e(cfg["domain"])}/">
 <meta property="og:title" content="{e(cfg["site_name"])}">
 <meta property="og:description" content="{e(lead["title"] if lead else cfg["tagline"])}">
-{f'<meta property="og:image" content="{e(lead["image"])}">' if lead and lead.get("image") else ""}
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
 <link rel="stylesheet" href="style.css">
 {head_scripts}</head>
