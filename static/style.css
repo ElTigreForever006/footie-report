@@ -64,3 +64,13 @@ footer { text-align:center; font:400 12px Arial, sans-serif; color:var(--muted);
 .counter { font:700 13px "Courier New", Courier, monospace; color:var(--ink); letter-spacing:1px; margin:0 0 10px; }
 .counter #visits { letter-spacing:2px; }
 @media (max-width: 820px) { .cols { grid-template-columns:1fr; } body { font-size:16px; } }
+/* podcast directory */
+.pods { max-width:720px; margin:0 auto; }
+.pods h1 { font:900 clamp(22px,3.4vw,32px)/1.15 "Arial Black", Arial, sans-serif; text-transform:uppercase;
+  text-align:center; margin:8px auto 10px; }
+.pods table { width:100%; border-collapse:collapse; font:700 15px/1.4 "Courier New", Courier, monospace; }
+.pods td { padding:9px 6px; border-bottom:1px dotted var(--rule); vertical-align:baseline; }
+.pods td.n { width:auto; }
+.pods td.by { font:400 12px Arial, sans-serif; color:var(--muted); white-space:nowrap; padding-left:10px; }
+.pods td.l { text-align:right; white-space:nowrap; font:400 12px Arial, sans-serif; }
+@media (max-width:560px) { .pods td.by { display:none; } }

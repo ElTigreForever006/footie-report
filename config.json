@@ -830,5 +830,79 @@
     "winter-olympics",
     "wrestling",
     "wwe"
+  ],
+  "podcasts": [
+    {
+      "name": "Football Daily",
+      "by": "BBC 5 Live",
+      "apple": "https://podcasts.apple.com/us/podcast/football-daily/id261291929",
+      "spotify": "https://open.spotify.com/search/Football%20Daily/shows"
+    },
+    {
+      "name": "Football Weekly",
+      "by": "The Guardian",
+      "apple": "https://podcasts.apple.com/us/podcast/football-weekly/id188674007",
+      "spotify": "https://open.spotify.com/search/Football%20Weekly/shows"
+    },
+    {
+      "name": "Football Ramble",
+      "by": "Stak",
+      "apple": "https://podcasts.apple.com/us/podcast/football-ramble/id254078311",
+      "spotify": "https://open.spotify.com/search/Football%20Ramble/shows"
+    },
+    {
+      "name": "ESPN FC",
+      "by": "ESPN",
+      "apple": "https://podcasts.apple.com/us/podcast/espn-fc/id849326609",
+      "spotify": "https://open.spotify.com/search/ESPN%20FC/shows"
+    },
+    {
+      "name": "The Rest Is Football",
+      "by": "Goalhanger",
+      "apple": "https://podcasts.apple.com/us/podcast/the-rest-is-football/id1701022490",
+      "spotify": "https://open.spotify.com/search/The%20Rest%20Is%20Football/shows"
+    },
+    {
+      "name": "The Athletic FC Podcast",
+      "by": "The Athletic",
+      "apple": "https://podcasts.apple.com/us/podcast/the-athletic-fc-podcast/id1488521447",
+      "spotify": "https://open.spotify.com/search/The%20Athletic%20FC%20Podcast/shows"
+    },
+    {
+      "name": "Men In Blazers",
+      "by": "Men In Blazers",
+      "apple": "https://podcasts.apple.com/us/podcast/men-in-blazers/id908407811",
+      "spotify": "https://open.spotify.com/search/Men%20In%20Blazers/shows"
+    },
+    {
+      "name": "Tifo Football",
+      "by": "The Athletic",
+      "apple": "https://podcasts.apple.com/us/podcast/tifo-football-podcast/id1227699368",
+      "spotify": "https://open.spotify.com/search/Tifo%20Football/shows"
+    },
+    {
+      "name": "On The Continent",
+      "by": "Stak",
+      "apple": "https://podcasts.apple.com/us/podcast/on-the-continent-a-european-football-podcast/id1699067317",
+      "spotify": "https://open.spotify.com/search/On%20The%20Continent/shows"
+    },
+    {
+      "name": "Attacking Third",
+      "by": "CBS Sports",
+      "apple": "https://podcasts.apple.com/us/podcast/attacking-third-a-cbs-sports-womens-soccer-podcast/id1573642138",
+      "spotify": "https://open.spotify.com/search/Attacking%20Third/shows"
+    },
+    {
+      "name": "Stick to Football",
+      "by": "The Overlap",
+      "apple": "https://podcasts.apple.com/us/podcast/stick-to-football/id1709142395",
+      "spotify": "https://open.spotify.com/search/Stick%20to%20Football/shows"
+    },
+    {
+      "name": "The 2 Robbies",
+      "by": "NBC Sports",
+      "apple": "https://podcasts.apple.com/us/podcast/the-2-robbies/id983059644",
+      "spotify": "https://open.spotify.com/search/The%202%20Robbies/shows"
+    }
   ]
 }

@@ -533,7 +533,7 @@ See the <a href="/how-to-watch.html">full week of fixtures</a> or
 
 def sitemap(cfg, extra_paths):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    urls = ["", "tables.html", "about.html"] + list(extra_paths)
+    urls = ["", "tables.html", "podcasts.html", "about.html", "privacy.html"] + list(extra_paths)
     body = "".join(
         f'<url><loc>https://{e(cfg["domain"])}/{e(p)}</loc><lastmod>{now}</lastmod></url>' for p in urls)
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{body}</urlset>\n'
@@ -553,6 +553,45 @@ def tables_page(cfg, tables):
 <p><a href="/">&larr; Back to headlines</a></p>
 {render_tables(tables, cfg)}
 <footer>Standings via ESPN. {e(cfg["site_name"])}</footer>
+</body>
+</html>
+"""
+
+
+def podcasts_page(cfg):
+    """Static directory of football podcasts. No feeds: episode links are unreliable
+    across podcast hosts, and a show's listing page never goes stale."""
+    shows = cfg.get("podcasts") or []
+    if not shows:
+        return ""
+    rows = []
+    for s in shows:
+        links = []
+        if s.get("apple"):
+            links.append(f'<a href="{e(s["apple"])}" target="_blank" rel="noopener">Apple</a>')
+        if s.get("spotify"):
+            links.append(f'<a href="{e(s["spotify"])}" target="_blank" rel="noopener">Spotify</a>')
+        rows.append(f'<tr><td class="n">{e(s["name"])}</td>'
+                    f'<td class="by">{e(s.get("by", ""))}</td>'
+                    f'<td class="l">{" &middot; ".join(links)}</td></tr>')
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Football podcasts &middot; {e(cfg["site_name"])}</title>
+<meta name="description" content="A curated list of the best world football podcasts, with links to listen on Apple Podcasts and Spotify.">
+<link rel="canonical" href="https://{e(cfg["domain"])}/podcasts.html">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<p class="crumb"><a href="/">&larr; Back to headlines</a></p>
+<section class="pods">
+<h1>FOOTBALL PODCASTS</h1>
+<p class="lede">The shows we actually listen to. Links open on Apple Podcasts or Spotify.</p>
+<table>{"".join(rows)}</table>
+</section>
+<footer>{e(cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
 </body>
 </html>
 """
@@ -638,7 +677,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <footer>
   {counter_html}
   Headlines link to their original publishers; all stories &copy; their respective owners.
-  <br>{e(cfg["site_name"])} &middot; <a href="about.html">About / Contact / Privacy</a>
+  <br>{e(cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
 </footer>
 </body>
 </html>
@@ -677,6 +716,10 @@ def main():
     (DIST / "index.html").write_text(render(cfg, lead, top, sections, games, tables))
     if tables:
         (DIST / "tables.html").write_text(tables_page(cfg, tables))
+    pods = podcasts_page(cfg)
+    if pods:
+        (DIST / "podcasts.html").write_text(pods)
+        print(f"Podcasts: {len(cfg.get('podcasts') or [])} shows.")
     pages = watch_pages(cfg, games)
     for path, html in pages.items():
         out = DIST / path
