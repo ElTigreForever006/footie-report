@@ -230,13 +230,16 @@ def get_tables(cfg):
             print(f"  TBL  FAIL {lg['name']} ({type(ex).__name__})")
             continue
         # A league may be split into groups (MLS = Eastern/Western Conference). Emit one
-        # table per group rather than silently showing only the first.
+        # table per group rather than silently showing only the first. With merge_groups
+        # the groups are combined into one overall table (MLS Supporters' Shield).
         groups = [(c.get("abbreviation") or c.get("name") or "",
                    ((c.get("standings") or {}).get("entries")) or [])
                   for c in (data.get("children") or [])]
         groups = [g for g in groups if g[1]]
         if not groups:
             groups = [("", ((data.get("standings") or {}).get("entries")) or [])]
+        if lg.get("merge_groups") and len(groups) > 1:
+            groups = [("", [en for _, entries in groups for en in entries])]
         for label, entries in groups:
             if not entries:
                 continue
@@ -257,9 +260,14 @@ def get_tables(cfg):
                     "gp": val("gamesPlayed"), "w": val("wins"), "d": val("ties"), "l": val("losses"),
                     "gd": val("pointDifferential"), "pts": val("points"),
                     "_pts": num("points"), "_gd": num("pointDifferential"), "_gp": num("gamesPlayed"),
+                    "_w": num("wins"),
                 })
-            # ESPN returns some groups unsorted, so never trust its order
-            rows.sort(key=lambda r: (-r["_pts"], -r["_gd"], r["_gp"]))
+            # ESPN returns some groups unsorted, so never trust its order. MLS breaks ties
+            # on wins before goal difference; European leagues go straight to GD.
+            if lg.get("merge_groups"):
+                rows.sort(key=lambda r: (-r["_pts"], -r["_w"], -r["_gd"], r["_gp"]))
+            else:
+                rows.sort(key=lambda r: (-r["_pts"], -r["_gd"], r["_gp"]))
             if rows:
                 name = f'{lg["name"]} {label}'.strip() if len(groups) > 1 else lg["name"]
                 tables.append({"name": name, "rows": rows})

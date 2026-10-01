@@ -690,7 +690,7 @@
       "code": "uefa.champions",
       "name": "Champions League",
       "tv": true,
-      "table": false
+      "table": true
     },
     {
       "code": "uefa.europa",
@@ -702,7 +702,8 @@
       "code": "usa.1",
       "name": "MLS",
       "tv": true,
-      "table": true
+      "table": true,
+      "merge_groups": true
     },
     {
       "code": "mex.1",
