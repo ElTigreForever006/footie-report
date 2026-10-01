@@ -229,28 +229,40 @@ def get_tables(cfg):
         except Exception as ex:
             print(f"  TBL  FAIL {lg['name']} ({type(ex).__name__})")
             continue
-        entries = None
-        for child in data.get("children") or []:
-            entries = ((child.get("standings") or {}).get("entries")) or entries
-            if entries:
-                break
-        if not entries:
-            entries = (data.get("standings") or {}).get("entries")
-        if not entries:
-            continue
-        rows = []
-        for en in entries:
-            stats = {s.get("name"): s for s in en.get("stats", [])}
-            def val(name):
-                s = stats.get(name) or {}
-                return s.get("displayValue") or ("" if s.get("value") is None else str(s.get("value")))
-            rows.append({
-                "team": (en.get("team") or {}).get("shortDisplayName", ""),
-                "gp": val("gamesPlayed"), "w": val("wins"), "d": val("ties"), "l": val("losses"),
-                "gd": val("pointDifferential"), "pts": val("points"),
-            })
-        if rows:
-            tables.append({"name": lg["name"], "rows": rows})
+        # A league may be split into groups (MLS = Eastern/Western Conference). Emit one
+        # table per group rather than silently showing only the first.
+        groups = [(c.get("abbreviation") or c.get("name") or "",
+                   ((c.get("standings") or {}).get("entries")) or [])
+                  for c in (data.get("children") or [])]
+        groups = [g for g in groups if g[1]]
+        if not groups:
+            groups = [("", ((data.get("standings") or {}).get("entries")) or [])]
+        for label, entries in groups:
+            if not entries:
+                continue
+            rows = []
+            for en in entries:
+                stats = {s.get("name"): s for s in en.get("stats", [])}
+                def val(name):
+                    s = stats.get(name) or {}
+                    return s.get("displayValue") or ("" if s.get("value") is None else str(s.get("value")))
+                def num(name):
+                    s = stats.get(name) or {}
+                    try:
+                        return float(s.get("value"))
+                    except (TypeError, ValueError):
+                        return 0.0
+                rows.append({
+                    "team": (en.get("team") or {}).get("shortDisplayName", ""),
+                    "gp": val("gamesPlayed"), "w": val("wins"), "d": val("ties"), "l": val("losses"),
+                    "gd": val("pointDifferential"), "pts": val("points"),
+                    "_pts": num("points"), "_gd": num("pointDifferential"), "_gp": num("gamesPlayed"),
+                })
+            # ESPN returns some groups unsorted, so never trust its order
+            rows.sort(key=lambda r: (-r["_pts"], -r["_gd"], r["_gp"]))
+            if rows:
+                name = f'{lg["name"]} {label}'.strip() if len(groups) > 1 else lg["name"]
+                tables.append({"name": name, "rows": rows})
     print(f"Tables: {len(tables)} leagues.")
     return tables
 
