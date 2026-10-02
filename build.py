@@ -765,7 +765,12 @@ def main():
         out.write_text(html)
     if pages:
         print(f"Wrote {len(pages)} how-to-watch pages.")
-    (DIST / "sitemap.xml").write_text(sitemap(cfg, pages.keys()))
+    # Per-match pages carry the kickoff date in the URL, so today's set 404s
+    # tomorrow. Submitting them would hand Google a sitemap that is mostly dead
+    # links within a day; they stay linked from how-to-watch.html, which is
+    # stable, so crawlers can still reach them on their own.
+    stable = [p for p in pages if not p.startswith("watch/")]
+    (DIST / "sitemap.xml").write_text(sitemap(cfg, stable))
     for f in (ROOT / "static").iterdir():
         (DIST / f.name).write_bytes(f.read_bytes())
     if cfg.get("domain") and "example.com" not in cfg["domain"]:
