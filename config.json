@@ -751,19 +751,22 @@
       "code": "usa.nwsl",
       "name": "NWSL",
       "tv": true,
-      "table": false
+      "table": false,
+      "women": true
     },
     {
       "code": "eng.w.1",
       "name": "Women's Super League",
       "tv": true,
-      "table": false
+      "table": false,
+      "women": true
     },
     {
       "code": "fifa.friendly.w",
       "name": "International friendly (women)",
       "tv": true,
-      "table": false
+      "table": false,
+      "women": true
     }
   ],
   "channel_names": {
@@ -904,5 +907,7 @@
       "apple": "https://podcasts.apple.com/us/podcast/the-2-robbies/id983059644",
       "spotify": "https://open.spotify.com/search/The%202%20Robbies/shows"
     }
-  ]
+  ],
+  "tv_rows_front": 8,
+  "pod_rows_front": 12
 }

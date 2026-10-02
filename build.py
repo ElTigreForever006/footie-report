@@ -205,6 +205,7 @@ def get_fixtures(cfg):
                 out.append({
                     "kick": local,
                     "league": lg["name"],
+                    "women": bool(lg.get("women")),
                     "home": hname,
                     "away": aname,
                     "tv": ", ".join(tvs),
@@ -391,29 +392,55 @@ def ad_slot(cfg, name):
             f'<script>(adsbygoogle=window.adsbygoogle||[]).push({{}});</script></div>')
 
 
-def render_tv(fixtures, cfg):
+def wmark(f):
+    """Women's fixtures are marked inline so the two games aren't confused."""
+    return ' <span class="w">(w)</span>' if f.get("women") else ""
+
+
+def render_tv(fixtures, cfg, limit=None):
     if not fixtures:
         return ""
     tz = tz_of(cfg)
     today = datetime.now(tz).date()
+    shown = fixtures[:limit] if limit else fixtures
     blocks = []
-    for day in sorted({f["kick"].date() for f in fixtures}):
+    for day in sorted({f["kick"].date() for f in shown}):
         label = "TODAY" if day == today else ("TOMORROW" if day == today + timedelta(days=1)
                                               else day.strftime("%A %b %-d").upper())
         rows = []
-        for f in (x for x in fixtures if x["kick"].date() == day):
+        for f in (x for x in shown if x["kick"].date() == day):
             when = f["detail"] if f["state"] == "in" else (
                 "FT" if f["state"] == "post" else f["kick"].strftime("%-I:%M %p"))
             score = f' <b>{e(f["score"])}</b>' if f["score"] else ""
             rows.append(
                 f'<tr><td class="t">{e(when)}</td>'
-                f'<td class="m">{e(f["away"])} at {e(f["home"])}{score}</td>'
+                f'<td class="m">{e(f["away"])} at {e(f["home"])}{wmark(f)}{score}</td>'
                 f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
     zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
+    more = len(fixtures) - len(shown)
+    tail = f"{more} more &middot; " if more > 0 else ""
     return (f'<section class="tv"><h2>ON TV {e(zone)}</h2>{"".join(blocks)}'
-            f'<p class="note">US listings, times {e(zone) or "local"} &middot; '
+            f'<p class="note">{tail}'
             f'<a href="/how-to-watch.html">Full week and channels &rarr;</a></p></section>')
+
+
+def render_pods_panel(cfg):
+    """Compact podcast list for the front page; the full page carries the detail."""
+    shows = cfg.get("podcasts") or []
+    if not shows:
+        return ""
+    rows = []
+    for s in shows[:cfg.get("pod_rows_front", 12)]:
+        links = []
+        if s.get("apple"):
+            links.append(f'<a href="{e(s["apple"])}" target="_blank" rel="noopener">Apple</a>')
+        if s.get("spotify"):
+            links.append(f'<a href="{e(s["spotify"])}" target="_blank" rel="noopener">Spotify</a>')
+        rows.append(f'<tr><td class="m">{e(s["name"])}</td>'
+                    f'<td class="c">{" &middot; ".join(links)}</td></tr>')
+    return (f'<section class="pods-panel"><h2>PODCASTS</h2><table>{"".join(rows)}</table>'
+            f'<p class="note"><a href="/podcasts.html">All shows &rarr;</a></p></section>')
 
 
 def render_tables(tables, cfg, limit=None):
@@ -492,7 +519,7 @@ def watch_pages(cfg, fixtures):
             slug = f'{slugify(f["away"])}-vs-{slugify(f["home"])}-{f["kick"]:%Y-%m-%d}'
             rows.append(
                 f'<tr><td class="t">{e(f["kick"].strftime("%-I:%M %p"))}</td>'
-                f'<td class="m"><a href="/watch/{e(slug)}.html">{e(match)}</a> '
+                f'<td class="m"><a href="/watch/{e(slug)}.html">{e(match)}</a>{wmark(f)} '
                 f'<span class="src">{e(f["league"])}</span></td>'
                 f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
             pages[f"watch/{slug}.html"] = match_page(cfg, f, slug)
@@ -665,12 +692,16 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
   <div class="tagline">{e(cfg["tagline"])} &middot; <span id="upd">Updated {updated}</span></div>
 </header>
 <hr>
-{render_tv(fixtures or [], cfg)}
 <main class="cols">
   <div class="col">{column(cols["left"])}</div>
   <div class="col">{column(cols["center"])}</div>
   <div class="col">{column(cols["right"])}</div>
 </main>
+<hr>
+<div class="panels">
+  <div class="panel">{render_tv(fixtures or [], cfg, limit=cfg.get("tv_rows_front", 8))}</div>
+  <div class="panel">{render_pods_panel(cfg)}</div>
+</div>
 <hr>
 {render_tables(tables or [], cfg, limit=cfg.get("table_rows_front", 6))}
 {ad_slot(cfg, "bottom")}
