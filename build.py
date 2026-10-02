@@ -11,6 +11,7 @@ import html
 import json
 import re
 import sys
+import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -386,7 +387,13 @@ def link(it, big=False):
 def ad_slot(cfg, name):
     client, slot = cfg.get("adsense_client"), (cfg.get("adsense_slots") or {}).get(name)
     if not (client and slot):
-        return f'<div class="ad ad-placeholder" aria-hidden="true">ADVERTISEMENT</div>'
+        # Until a network fills these, the empty inventory sells itself.
+        email = cfg.get("ad_email") or "info@footiereport.com"
+        subject = urllib.parse.quote(f'Advertising on {cfg.get("site_name", "The Footie Report")}')
+        return (f'<a class="ad ad-house" href="mailto:{e(email)}?subject={subject}">'
+                f'<span class="ad-house-h">ADVERTISE HERE</span>'
+                f'<span class="ad-house-s">Reach football fans all day, every day</span>'
+                f'<span class="ad-house-c">{e(email)}</span></a>')
     return (f'<div class="ad"><ins class="adsbygoogle" style="display:block" data-ad-client="{e(client)}" '
             f'data-ad-slot="{e(slot)}" data-ad-format="auto" data-full-width-responsive="true"></ins>'
             f'<script>(adsbygoogle=window.adsbygoogle||[]).push({{}});</script></div>')

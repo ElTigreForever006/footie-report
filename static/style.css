@@ -29,6 +29,15 @@ hr { border:0; border-top:3px solid var(--rule); margin:12px 0; }
 .ad { margin:14px auto; text-align:center; min-height:90px; }
 .ad-placeholder { display:flex; align-items:center; justify-content:center; border:1px dashed var(--muted);
   color:var(--muted); font:400 11px Arial, sans-serif; letter-spacing:2px; }
+/* house ad: the unsold slot sells itself */
+.ad-house { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  border:1px dashed var(--muted); padding:12px 10px; text-decoration:none; color:var(--ink); }
+.ad-house:visited { color:var(--ink); }
+.ad-house:hover { border-color:var(--ink); border-style:solid; }
+.ad-house-h { font:900 15px/1.2 Arial, Helvetica, sans-serif; text-transform:uppercase; letter-spacing:2px; }
+.ad-house-s { font:400 12px Arial, sans-serif; color:var(--muted); }
+.ad-house-c { font:700 12px "Courier New", Courier, monospace; text-decoration:underline; }
+.ad-house:hover .ad-house-c { color:var(--hot); }
 /* on-TV block and league tables */
 .tv, .tables { margin:14px 0 4px; }
 .tv h2, .tables h2 { font:900 15px/1.2 Arial, Helvetica, sans-serif; text-transform:uppercase; letter-spacing:1px;
