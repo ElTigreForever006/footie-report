@@ -349,6 +349,9 @@ def curate(items, cfg, pinned):
     hot_words = [h.lower() for h in cfg.get("hot_words", [])]
     reject = [r.lower() for r in cfg.get("reject_terms", [])]
     reject_url = {r.lower() for r in cfg.get("reject_url_terms", [])}
+    # whole outlets we never want to credit, matched on the byline rather than the words:
+    # a sportsbook's football page is still a sportsbook.
+    reject_src = [s.lower() for s in cfg.get("reject_sources", [])]
     football = [f.lower() for f in cfg.get("football_terms", [])]
     womens_section = cfg.get("womens_section")
     womens_terms = [w.lower() for w in cfg.get("womens_terms", [])]
@@ -368,6 +371,9 @@ def curate(items, cfg, pinned):
             continue
         low = it["title"].lower()
         if any(b in low for b in blocked):
+            continue
+        if reject_src and any(s in (it.get("source") or "").lower() for s in reject_src):
+            dropped += 1
             continue
         # other sports never belong here, and anything off a mixed-sport feed must prove
         # it is about football before it gets in
