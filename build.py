@@ -112,6 +112,7 @@ def parse_feed(raw, feed):
             "section": feed["section"],
             "priority": feed.get("priority", 1),
             "pure": feed.get("pure", False),  # football-only feed: skip the football-word check
+            "womens": feed.get("womens", False),  # women's-only feed: section is not negotiable
         })
     return items
 
@@ -278,15 +279,56 @@ def get_tables(cfg):
 
 
 # ---------------------------------------------------------------- editorial logic
+STOP = set("""the and for with after from his her their its that this has have had was were are not
+but out who how what when over into than then they them you your our can could would should will
+says said say make made just more most some new old amid ahead back been being before best both
+down even first last like long much next now off once only other same still such take there these
+those too under until very which while win wins won all any has his her""".split())
+
+
+def stem(w):
+    """Crude suffix stripping: 'causing' and 'caused' describe the same event."""
+    if w.endswith("'s"):
+        w = w[:-2]
+    for suf in ("ing", "ed", "es", "s"):
+        if len(w) > 4 and w.endswith(suf):
+            return w[:-len(suf)].rstrip("e") or w
+    return w
+
+
 def words(title):
-    return set(w for w in re.findall(r"[a-z0-9']+", title.lower()) if len(w) > 2)
+    toks = re.findall(r"[a-z0-9']+", title.lower())
+    return set(stem(t) for t in toks if len(t) > 2 and t not in STOP)
 
 
-def is_dupe(a, b):
-    wa, wb = words(a), words(b)
+def doc_freq(sigs):
+    """How many headlines each word appears in -- rare words are the distinctive ones."""
+    df = {}
+    for s in sigs:
+        for w in s:
+            df[w] = df.get(w, 0) + 1
+    return df
+
+
+def is_dupe(wa, wb, df, rare_max=3):
+    """Two accounts of one story. Shared *rare* words (names, clubs) carry the signal;
+    plain word overlap is unreliable when a wire brief meets a 30-word tabloid headline,
+    so containment against the shorter headline matters more than symmetric overlap."""
     if not wa or not wb:
         return False
-    return len(wa & wb) / len(wa | wb) >= 0.6
+    inter = wa & wb
+    if not inter:
+        return False
+    jaccard = len(inter) / len(wa | wb)
+    if jaccard >= 0.50:
+        return True
+    rare = sum(1 for w in inter if df.get(w, 99) <= rare_max)
+    contain = len(inter) / min(len(wa), len(wb))
+    if rare >= 2 and jaccard >= 0.22:
+        return True
+    if rare >= 2 and contain >= 0.55:
+        return True
+    return rare >= 3 and contain >= 0.50
 
 
 def curate(items, cfg, pinned):
@@ -297,6 +339,8 @@ def curate(items, cfg, pinned):
     reject = [r.lower() for r in cfg.get("reject_terms", [])]
     reject_url = {r.lower() for r in cfg.get("reject_url_terms", [])}
     football = [f.lower() for f in cfg.get("football_terms", [])]
+    womens_section = cfg.get("womens_section")
+    womens_terms = [w.lower() for w in cfg.get("womens_terms", [])]
     dropped = 0
 
     def wrong_sport_url(url):
@@ -321,11 +365,18 @@ def curate(items, cfg, pinned):
         ):
             dropped += 1
             continue
-        # keyword routing: a Real Madrid story from a general feed goes to Spain, etc.
-        for section, kws in cfg.get("keyword_sections", {}).items():
-            if any(re.search(r"\b" + re.escape(k) + r"\b", low) for k in kws):
-                it["section"] = section
-                break
+        # Women's football is decided first and overrules everything else: a WSL report
+        # that mentions Arsenal belongs in the women's section, not the Premier League
+        # one. Dedicated feeds are trusted outright, since plenty of women's headlines
+        # ("Pina hits four as Barcelona score seven") carry no marker of their own.
+        if womens_section and (it.get("womens") or any(has(t, low) for t in womens_terms)):
+            it["section"] = womens_section
+        else:
+            # keyword routing: a Real Madrid story from a general feed goes to Spain, etc.
+            for section, kws in cfg.get("keyword_sections", {}).items():
+                if any(re.search(r"\b" + re.escape(k) + r"\b", low) for k in kws):
+                    it["section"] = section
+                    break
         it["hot"] = any(re.search(r"\b" + re.escape(h) + r"\b", low) for h in hot_words)
         age_h = ((now - it["date"]).total_seconds() / 3600) if it["date"] else 12
         it["score"] = it["priority"] * 2 + (4 if it["hot"] else 0) + max(0, 12 - age_h) / 2
@@ -333,14 +384,44 @@ def curate(items, cfg, pinned):
 
     if dropped:
         print(f"Filtered out {dropped} non-football headlines.")
-    # dedupe: best-scoring version of each story wins
+    # dedupe: cluster every retelling of a story, then keep the best-scoring one. The
+    # clustering is transitive because two accounts of the same event often share almost
+    # no wording with each other while both plainly match a third.
     fresh.sort(key=lambda x: -x["score"])
-    kept, seen_urls = [], set()
-    for it in fresh:
-        if it["url"] in seen_urls or any(is_dupe(it["title"], k["title"]) for k in kept):
+    sigs = [words(f["title"]) for f in fresh]
+    df = doc_freq(sigs)
+    parent = list(range(len(fresh)))
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    def union(i, j):
+        a, b = find(i), find(j)
+        if a != b:
+            parent[a] = b
+
+    by_url = {}
+    for i, it in enumerate(fresh):
+        first = by_url.setdefault(it["url"], i)
+        if first != i:
+            union(i, first)
+    for i in range(len(fresh)):
+        for j in range(i + 1, len(fresh)):
+            if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df):
+                union(i, j)
+
+    kept, seen_root = [], set()
+    for i, it in enumerate(fresh):  # score-sorted, so the first of a cluster is the best
+        root = find(i)
+        if root in seen_root:
             continue
-        seen_urls.add(it["url"])
+        seen_root.add(root)
         kept.append(it)
+    if len(fresh) != len(kept):
+        print(f"Merged {len(fresh) - len(kept)} duplicate retellings.")
 
     # lead story
     lead_pin = pinned.get("lead") or {}
@@ -363,8 +444,9 @@ def curate(items, cfg, pinned):
             top.append(k)
     kept = [k for k in kept if k not in top]
 
-    # sections: newest first inside each
-    per = cfg.get("items_per_column", 22)
+    # sections: newest first inside each. The lead and the stories above the masthead
+    # were already pulled out of `kept`, so the cap applies to the columns alone.
+    per = cfg.get("section_limit", cfg.get("items_per_column", 7))
     sections = {}
     for k in sorted(kept, key=lambda x: x["date"] or cutoff, reverse=True):
         sections.setdefault(k["section"], []).append(k)

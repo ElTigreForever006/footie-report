@@ -10,7 +10,6 @@
   },
   "google_analytics_id": "",
   "max_age_hours": 48,
-  "items_per_column": 22,
   "top_stories_count": 4,
   "hot_words": [
     "breaking",
@@ -35,7 +34,8 @@
   "columns": {
     "left": [
       "Transfers & Rumours",
-      "Premier League"
+      "Premier League",
+      "Americas & Rest of World"
     ],
     "center": [
       "Champions League & Europe",
@@ -43,9 +43,9 @@
       "Italy"
     ],
     "right": [
-      "Germany & France",
+      "Women's Football",
       "Internationals",
-      "Americas & Rest of World"
+      "Germany & France"
     ]
   },
   "feeds": [
@@ -232,9 +232,10 @@
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/womensfootball/rss",
-      "section": "Internationals",
-      "priority": 1,
-      "pure": true
+      "section": "Women's Football",
+      "priority": 2,
+      "pure": true,
+      "womens": true
     },
     {
       "name": "CBS Sports",
@@ -294,6 +295,31 @@
       "section": "Champions League & Europe",
       "priority": 1,
       "pure": true
+    },
+    {
+      "name": "BBC Women's Football",
+      "url": "https://feeds.bbci.co.uk/sport/football/womens/rss.xml",
+      "section": "Women's Football",
+      "priority": 3,
+      "pure": true,
+      "womens": true
+    },
+    {
+      "name": "The Equalizer",
+      "url": "https://equalizersoccer.com/feed/",
+      "section": "Women's Football",
+      "priority": 2,
+      "pure": true,
+      "womens": true
+    },
+    {
+      "name": "Google News",
+      "url": "https://news.google.com/rss/search?q=NWSL+OR+%22Women%27s+Super+League%22+OR+%22USWNT%22+when:2d&hl=en-US&gl=US&ceid=US:en",
+      "section": "Women's Football",
+      "priority": 1,
+      "pure": true,
+      "womens": true,
+      "strip_source": true
     }
   ],
   "keyword_sections": {
@@ -916,5 +942,44 @@
     }
   ],
   "tv_rows_front": 8,
-  "pod_rows_front": 12
+  "pod_rows_front": 12,
+  "section_limit": 7,
+  "womens_section": "Women's Football",
+  "womens_terms": [
+    "women",
+    "women's",
+    "womens",
+    "wsl",
+    "women's super league",
+    "nwsl",
+    "uswnt",
+    "lionesses",
+    "matildas",
+    "liga f",
+    "frauen",
+    "feminin",
+    "femenino",
+    "uwcl",
+    "women's champions league",
+    "women's world cup",
+    "weuro",
+    "euro 2029",
+    "arsenal women",
+    "chelsea women",
+    "barcelona femeni",
+    "angel city",
+    "gotham fc",
+    "orlando pride",
+    "kansas city current",
+    "portland thorns",
+    "san diego wave",
+    "washington spirit",
+    "north carolina courage",
+    "racing louisville",
+    "bay fc",
+    "utah royals",
+    "houston dash",
+    "seattle reign",
+    "chicago stars"
+  ]
 }
