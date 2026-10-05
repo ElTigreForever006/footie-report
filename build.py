@@ -114,6 +114,8 @@ def parse_feed(raw, feed):
             "priority": feed.get("priority", 1),
             "pure": feed.get("pure", False),  # football-only feed: skip the football-word check
             "womens": feed.get("womens", False),  # women's-only feed: section is not negotiable
+            # broad search feed: its section is a hint, not a claim (see curate)
+            "needs_match": feed.get("needs_match", False),
         })
     return items
 
@@ -390,10 +392,18 @@ def curate(items, cfg, pinned):
             it["section"] = womens_section
         else:
             # keyword routing: a Real Madrid story from a general feed goes to Spain, etc.
+            matched = False
             for section, kws in cfg.get("keyword_sections", {}).items():
                 if any(re.search(r"\b" + re.escape(k) + r"\b", low) for k in kws):
                     it["section"] = section
+                    matched = True
                     break
+            # A search feed aimed at Serie A also returns plenty that merely mentions it, so
+            # its own section is only a hint. With nothing matched we cannot say where the
+            # story belongs, and guessing is what put an England call-up under Italy.
+            if not matched and it.get("needs_match"):
+                dropped += 1
+                continue
         it["hot"] = any(re.search(r"\b" + re.escape(h) + r"\b", low) for h in hot_words)
         age_h = ((now - it["date"]).total_seconds() / 3600) if it["date"] else 12
         it["score"] = it["priority"] * 2 + (4 if it["hot"] else 0) + max(0, 12 - age_h) / 2

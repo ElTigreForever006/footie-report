@@ -40,12 +40,11 @@
     "center": [
       "Champions League & Europe",
       "Spain",
-      "Italy"
+      "On The Continent"
     ],
     "right": [
       "Women's Football",
-      "Internationals",
-      "Germany & France"
+      "Internationals"
     ]
   },
   "feeds": [
@@ -190,35 +189,35 @@
     {
       "name": "Football Italia",
       "url": "https://www.football-italia.net/feed/",
-      "section": "Italy",
+      "section": "On The Continent",
       "priority": 2,
       "pure": true
     },
     {
       "name": "CalcioMercato",
       "url": "https://www.calciomercato.com/rss/",
-      "section": "Italy",
+      "section": "On The Continent",
       "priority": 1,
       "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/serieafootball/rss",
-      "section": "Italy",
+      "section": "On The Continent",
       "priority": 1,
       "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/bundesligafootball/rss",
-      "section": "Germany & France",
+      "section": "On The Continent",
       "priority": 1,
       "pure": true
     },
     {
       "name": "Guardian",
       "url": "https://www.theguardian.com/football/ligue1football/rss",
-      "section": "Germany & France",
+      "section": "On The Continent",
       "priority": 1,
       "pure": true
     },
@@ -324,18 +323,20 @@
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=%28%22Serie%20A%22%20OR%20Juventus%20OR%20Napoli%20OR%20%22Inter%20Milan%22%20OR%20%22AC%20Milan%22%29%20%28site%3Aespn.com%20OR%20site%3Agoal.com%20OR%20site%3Atheguardian.com%20OR%20site%3Askysports.com%20OR%20site%3Aonefootball.com%20OR%20site%3Afootball-italia.net%20OR%20site%3Abavarianfootballworks.com%20OR%20site%3Agetfootballnewsfrance.com%20OR%20site%3Afootball-espana.net%20OR%20site%3Abbc.com%29%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
-      "section": "Italy",
+      "section": "On The Continent",
       "priority": 1,
       "pure": false,
-      "strip_source": true
+      "strip_source": true,
+      "needs_match": true
     },
     {
       "name": "Google News",
       "url": "https://news.google.com/rss/search?q=%28Bundesliga%20OR%20%22Bayern%20Munich%22%20OR%20%22Borussia%20Dortmund%22%20OR%20Leverkusen%20OR%20%22Ligue%201%22%20OR%20%22Paris%20Saint-Germain%22%20OR%20%22AS%20Monaco%22%29%20%28site%3Aespn.com%20OR%20site%3Agoal.com%20OR%20site%3Atheguardian.com%20OR%20site%3Askysports.com%20OR%20site%3Aonefootball.com%20OR%20site%3Afootball-italia.net%20OR%20site%3Abavarianfootballworks.com%20OR%20site%3Agetfootballnewsfrance.com%20OR%20site%3Afootball-espana.net%20OR%20site%3Abbc.com%29%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
-      "section": "Germany & France",
+      "section": "On The Continent",
       "priority": 1,
       "pure": false,
-      "strip_source": true
+      "strip_source": true,
+      "needs_match": true
     },
     {
       "name": "Google News",
@@ -343,7 +344,8 @@
       "section": "Champions League & Europe",
       "priority": 1,
       "pure": false,
-      "strip_source": true
+      "strip_source": true,
+      "needs_match": true
     }
   ],
   "keyword_sections": {
@@ -375,7 +377,7 @@
       "sevilla",
       "athletic club"
     ],
-    "Italy": [
+    "On The Continent": [
       "serie a",
       "juventus",
       "inter milan",
@@ -383,9 +385,7 @@
       "napoli",
       "roma",
       "lazio",
-      "atalanta"
-    ],
-    "Germany & France": [
+      "atalanta",
       "bundesliga",
       "bayern",
       "dortmund",
@@ -395,7 +395,50 @@
       "paris saint-germain",
       "marseille",
       "lyon",
-      "monaco"
+      "monaco",
+      "leipzig",
+      "rb leipzig",
+      "eintracht",
+      "frankfurt",
+      "stuttgart",
+      "wolfsburg",
+      "gladbach",
+      "monchengladbach",
+      "werder",
+      "union berlin",
+      "hoffenheim",
+      "mainz",
+      "freiburg",
+      "augsburg",
+      "st pauli",
+      "lille",
+      "nice",
+      "rennes",
+      "lens",
+      "nantes",
+      "strasbourg",
+      "toulouse",
+      "brest",
+      "auxerre",
+      "fiorentina",
+      "torino",
+      "bologna",
+      "udinese",
+      "sassuolo",
+      "genoa",
+      "cagliari",
+      "verona",
+      "parma",
+      "como",
+      "eredivisie",
+      "ajax",
+      "psv",
+      "feyenoord",
+      "az alkmaar",
+      "primeira liga",
+      "benfica",
+      "porto",
+      "sporting cp"
     ],
     "Internationals": [
       "world cup",
