@@ -418,16 +418,20 @@ def render_tv(fixtures, cfg, limit=None):
         for f in (x for x in shown if x["kick"].date() == day):
             when = f["detail"] if f["state"] == "in" else (
                 "FT" if f["state"] == "post" else f["kick"].strftime("%-I:%M %p"))
+            # data-time marks a cell holding a clock time; live and finished rows carry a
+            # status instead, so the browser regroups them by day but leaves the text be.
+            live = f["state"] in ("in", "post")
             score = f' <b>{e(f["score"])}</b>' if f["score"] else ""
             rows.append(
-                f'<tr><td class="t">{e(when)}</td>'
+                f'<tr data-utc="{utc_attr(f["kick"])}">'
+                f'<td class="t"{"" if live else " data-time"}>{e(when)}</td>'
                 f'<td class="m">{e(f["away"])} at {e(f["home"])}{wmark(f)}{score}</td>'
                 f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
     zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
     more = len(fixtures) - len(shown)
     tail = f"{more} more &middot; " if more > 0 else ""
-    return (f'<section class="tv"><h2>ON TV {e(zone)}</h2>{"".join(blocks)}'
+    return (f'<section class="tv"><h2>ON TV <span class="tz">{e(zone)}</span></h2>{"".join(blocks)}'
             f'<p class="note">{tail}'
             f'<a href="/how-to-watch.html">Full week and channels &rarr;</a></p></section>')
 
@@ -482,6 +486,70 @@ def zone_times(kick, cfg):
     return " / ".join(out)
 
 
+def utc_attr(kick):
+    """Kickoff as an ISO instant, so the browser can re-render it in the viewer's zone."""
+    return kick.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# Served times are Eastern so that crawlers and no-JS readers get a correct, indexable
+# page. This rewrites them in the visitor's own zone when that zone differs, regrouping
+# the day headings too -- a 9pm ET Friday kickoff is Saturday morning in Europe. Any
+# failure leaves the server-rendered Eastern markup exactly as it is.
+TZ_SCRIPT = """<script>
+(function(){
+try{
+  var tz=Intl.DateTimeFormat().resolvedOptions().timeZone; if(!tz) return;
+  var HOME='America/New_York', now=new Date();
+  function part(d,zone,opts){return new Intl.DateTimeFormat('en-US',Object.assign({timeZone:zone},opts)).format(d);}
+  var stamp={hour:'numeric',minute:'2-digit',year:'numeric',month:'2-digit',day:'2-digit'};
+  if(part(now,tz,stamp)===part(now,HOME,stamp)) return;   // same clock as the server: nothing to do
+  function key(d){return new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
+  function clock(d){return part(d,tz,{hour:'numeric',minute:'2-digit'});}
+  function abbr(d){var p=new Intl.DateTimeFormat('en-US',{timeZone:tz,timeZoneName:'short'}).formatToParts(d);
+    for(var i=0;i<p.length;i++){if(p[i].type==='timeZoneName') return p[i].value;} return '';}
+  var todayK=key(now), tomorrowK=key(new Date(now.getTime()+864e5));
+  function label(d){var k=key(d);
+    if(k===todayK) return 'TODAY';
+    if(k===tomorrowK) return 'TOMORROW';
+    return part(d,tz,{weekday:'long',month:'short',day:'numeric'}).replace(/,/g,'').toUpperCase();}
+
+  Array.prototype.forEach.call(document.querySelectorAll('section.tv'),function(sec){
+    var rows=sec.querySelectorAll('tr[data-utc]'); if(!rows.length) return;
+    var order=[],seen={};
+    Array.prototype.forEach.call(rows,function(tr){
+      var d=new Date(tr.getAttribute('data-utc')); if(isNaN(d)) return;
+      var cell=tr.querySelector('td.t[data-time]'); if(cell) cell.textContent=clock(d);
+      var k=key(d);
+      if(!seen[k]){seen[k]={label:label(d),rows:[]};order.push(seen[k]);}
+      seen[k].rows.push(tr);
+    });
+    if(!order.length) return;
+    Array.prototype.forEach.call(sec.querySelectorAll('h3, table'),function(n){n.parentNode.removeChild(n);});
+    var anchor=sec.querySelector('p.note');
+    order.forEach(function(g){
+      var h=document.createElement('h3'); h.textContent=g.label;
+      var t=document.createElement('table'), b=document.createElement('tbody');
+      g.rows.forEach(function(r){b.appendChild(r);}); t.appendChild(b);
+      if(anchor){sec.insertBefore(h,anchor); sec.insertBefore(t,anchor);} else {sec.appendChild(h); sec.appendChild(t);}
+    });
+  });
+
+  var a=abbr(now);
+  Array.prototype.forEach.call(document.querySelectorAll('.tz'),function(n){n.textContent=a;});
+  Array.prototype.forEach.call(document.querySelectorAll('.tz-name'),function(n){n.textContent='your local time';});
+
+  var lt=document.querySelector('.localtime[data-utc]');
+  if(lt){var d=new Date(lt.getAttribute('data-utc'));
+    if(!isNaN(d)){
+      lt.textContent=part(d,tz,{weekday:'long',month:'long',day:'numeric',hour:'numeric',minute:'2-digit'})+' '+abbr(d);
+      var row=lt.parentNode; while(row&&row.tagName!=='TR'){row=row.parentNode;}
+      if(row) row.removeAttribute('hidden');
+    }}
+}catch(e){}
+})();
+</script>"""
+
+
 def page_shell(cfg, title, description, body, canonical=""):
     can = f'<link rel="canonical" href="https://{e(cfg["domain"])}/{e(canonical)}">' if cfg.get("domain") else ""
     return f"""<!doctype html>
@@ -501,6 +569,7 @@ def page_shell(cfg, title, description, body, canonical=""):
 {body}
 <footer>Listings are for the United States and can change; check your provider.
 <br>{e(cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+{TZ_SCRIPT}
 </body>
 </html>
 """
@@ -525,7 +594,8 @@ def watch_pages(cfg, fixtures):
             match = f'{f["away"]} at {f["home"]}'
             slug = f'{slugify(f["away"])}-vs-{slugify(f["home"])}-{f["kick"]:%Y-%m-%d}'
             rows.append(
-                f'<tr><td class="t">{e(f["kick"].strftime("%-I:%M %p"))}</td>'
+                f'<tr data-utc="{utc_attr(f["kick"])}">'
+                f'<td class="t" data-time>{e(f["kick"].strftime("%-I:%M %p"))}</td>'
                 f'<td class="m"><a href="/watch/{e(slug)}.html">{e(match)}</a>{wmark(f)} '
                 f'<span class="src">{e(f["league"])}</span></td>'
                 f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
@@ -533,7 +603,8 @@ def watch_pages(cfg, fixtures):
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
 
     body = (f'<section class="tv"><h1>Soccer on US TV this week</h1>'
-            f'<p class="lede">Every match with a US broadcaster, with kickoff times in Eastern. '
+            f'<p class="lede">Every match with a US broadcaster, with kickoff times in '
+            f'<span class="tz-name">Eastern</span>. '
             f'Click a match for times in every US time zone.</p>{"".join(blocks)}</section>')
     pages["how-to-watch.html"] = page_shell(
         cfg, "Soccer on TV in the US this week: times and channels",
@@ -556,6 +627,7 @@ def match_page(cfg, f, slug):
 <tr><td>Match</td><td>{e(match)} &middot; {e(f["league"])}</td></tr>
 <tr><td>Date</td><td>{e(when)}</td></tr>
 <tr><td>Kickoff</td><td>{e(zone_times(f["kick"], cfg))}</td></tr>
+<tr hidden><td>Your time</td><td class="localtime" data-utc="{utc_attr(f["kick"])}"></td></tr>
 <tr><td>US TV / stream</td><td>{e(tv)}</td></tr>
 </table>
 <p class="note">Times and channels come from the published schedule and can change.
@@ -717,6 +789,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
   Headlines link to their original publishers; all stories &copy; their respective owners.
   <br>{e(cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
 </footer>
+{TZ_SCRIPT}
 </body>
 </html>
 """
