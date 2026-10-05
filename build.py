@@ -11,6 +11,7 @@ import html
 import json
 import re
 import sys
+import unicodedata
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -296,8 +297,14 @@ def stem(w):
     return w
 
 
+def fold(s):
+    """Strip accents, so Hallgrimsson and Hallgrímsson are the same man. Without this the
+    tokenizer splits the accented spelling in two and the match is silently lost."""
+    return "".join(c for c in unicodedata.normalize("NFKD", s) if not unicodedata.combining(c))
+
+
 def words(title):
-    toks = re.findall(r"[a-z0-9']+", title.lower())
+    toks = re.findall(r"[a-z0-9']+", fold(title).lower())
     return set(stem(t) for t in toks if len(t) > 2 and t not in STOP)
 
 
@@ -322,8 +329,12 @@ def is_dupe(wa, wb, df, rare_max=3):
     jaccard = len(inter) / len(wa | wb)
     if jaccard >= 0.50:
         return True
-    rare = sum(1 for w in inter if df.get(w, 99) <= rare_max)
     contain = len(inter) / min(len(wa), len(wb))
+    # the shorter headline almost entirely inside the longer one, and plenty of overlap
+    # either way: the same story told at two lengths, whatever the words happen to be
+    if jaccard >= 0.40 and contain >= 0.70:
+        return True
+    rare = sum(1 for w in inter if df.get(w, 99) <= rare_max)
     if rare >= 2 and jaccard >= 0.22:
         return True
     if rare >= 2 and contain >= 0.55:
@@ -390,6 +401,9 @@ def curate(items, cfg, pinned):
     fresh.sort(key=lambda x: -x["score"])
     sigs = [words(f["title"]) for f in fresh]
     df = doc_freq(sigs)
+    # "rare" has to scale with the batch: on a busy night Ireland and Israel appear in a
+    # dozen headlines and stop being distinctive at all.
+    rare_max = max(3, len(fresh) // 50)
     parent = list(range(len(fresh)))
 
     def find(i):
@@ -410,7 +424,7 @@ def curate(items, cfg, pinned):
             union(i, first)
     for i in range(len(fresh)):
         for j in range(i + 1, len(fresh)):
-            if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df):
+            if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df, rare_max):
                 union(i, j)
 
     kept, seen_root = [], set()
