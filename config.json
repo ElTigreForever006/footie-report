@@ -320,6 +320,30 @@
       "pure": true,
       "womens": true,
       "strip_source": true
+    },
+    {
+      "name": "Google News",
+      "url": "https://news.google.com/rss/search?q=%28%22Serie%20A%22%20OR%20Juventus%20OR%20Napoli%20OR%20%22Inter%20Milan%22%20OR%20%22AC%20Milan%22%29%20%28site%3Aespn.com%20OR%20site%3Agoal.com%20OR%20site%3Atheguardian.com%20OR%20site%3Askysports.com%20OR%20site%3Aonefootball.com%20OR%20site%3Afootball-italia.net%20OR%20site%3Abavarianfootballworks.com%20OR%20site%3Agetfootballnewsfrance.com%20OR%20site%3Afootball-espana.net%20OR%20site%3Abbc.com%29%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
+      "section": "Italy",
+      "priority": 1,
+      "pure": false,
+      "strip_source": true
+    },
+    {
+      "name": "Google News",
+      "url": "https://news.google.com/rss/search?q=%28Bundesliga%20OR%20%22Bayern%20Munich%22%20OR%20%22Borussia%20Dortmund%22%20OR%20Leverkusen%20OR%20%22Ligue%201%22%20OR%20%22Paris%20Saint-Germain%22%20OR%20%22AS%20Monaco%22%29%20%28site%3Aespn.com%20OR%20site%3Agoal.com%20OR%20site%3Atheguardian.com%20OR%20site%3Askysports.com%20OR%20site%3Aonefootball.com%20OR%20site%3Afootball-italia.net%20OR%20site%3Abavarianfootballworks.com%20OR%20site%3Agetfootballnewsfrance.com%20OR%20site%3Afootball-espana.net%20OR%20site%3Abbc.com%29%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
+      "section": "Germany & France",
+      "priority": 1,
+      "pure": false,
+      "strip_source": true
+    },
+    {
+      "name": "Google News",
+      "url": "https://news.google.com/rss/search?q=%28%22Champions%20League%22%20OR%20%22Europa%20League%22%20OR%20%22Conference%20League%22%29%20%28site%3Aespn.com%20OR%20site%3Agoal.com%20OR%20site%3Atheguardian.com%20OR%20site%3Askysports.com%20OR%20site%3Aonefootball.com%20OR%20site%3Afootball-italia.net%20OR%20site%3Abavarianfootballworks.com%20OR%20site%3Agetfootballnewsfrance.com%20OR%20site%3Afootball-espana.net%20OR%20site%3Abbc.com%29%20when%3A2d&hl=en-US&gl=US&ceid=US:en",
+      "section": "Champions League & Europe",
+      "priority": 1,
+      "pure": false,
+      "strip_source": true
     }
   ],
   "keyword_sections": {

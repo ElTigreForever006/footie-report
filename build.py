@@ -403,7 +403,7 @@ def curate(items, cfg, pinned):
     df = doc_freq(sigs)
     # "rare" has to scale with the batch: on a busy night Ireland and Israel appear in a
     # dozen headlines and stop being distinctive at all.
-    rare_max = max(3, len(fresh) // 50)
+    rare_max = max(3, min(8, len(fresh) // 50))
     parent = list(range(len(fresh)))
 
     def find(i):
@@ -427,12 +427,20 @@ def curate(items, cfg, pinned):
             if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df, rare_max):
                 union(i, j)
 
+    # A story carried by both a women's feed and a general one is a women's story whichever
+    # copy happens to win on score: publishers syndicate the same report into several feeds,
+    # and the women's one is the specific claim. This is what catches the headlines that say
+    # nothing about being women's football ("Pina hits four as Barcelona score seven").
+    womens_roots = {find(i) for i, it in enumerate(fresh) if it.get("womens")}
+
     kept, seen_root = [], set()
     for i, it in enumerate(fresh):  # score-sorted, so the first of a cluster is the best
         root = find(i)
         if root in seen_root:
             continue
         seen_root.add(root)
+        if womens_section and root in womens_roots:
+            it["section"] = womens_section
         kept.append(it)
     if len(fresh) != len(kept):
         print(f"Merged {len(fresh) - len(kept)} duplicate retellings.")
