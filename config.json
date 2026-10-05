@@ -688,6 +688,12 @@
       "table": true
     },
     {
+      "code": "ned.1",
+      "name": "Eredivisie",
+      "tv": false,
+      "table": true
+    },
+    {
       "code": "uefa.champions",
       "name": "Champions League",
       "tv": true,
