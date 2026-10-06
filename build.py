@@ -488,8 +488,21 @@ def curate(items, cfg, pinned):
     sections = {}
     for k in sorted(kept, key=lambda x: x["date"] or cutoff, reverse=True):
         sections.setdefault(k["section"], []).append(k)
+    # Inside a section the order is pure recency, so the outlet that posts most often
+    # takes every slot -- that is how "On The Continent" filled with seven Football Italia
+    # stories and no German or French ones. Take up to `cap` from any one source first,
+    # then let the overflow back in, so a genuinely one-outlet day still fills the column.
+    cap = cfg.get("max_per_source", 3)
     for s in sections:
-        sections[s] = sections[s][:per]
+        picked, spare, seen = [], [], {}
+        for it in sections[s]:
+            src = (it.get("source") or "").strip().lower()
+            if seen.get(src, 0) < cap:
+                seen[src] = seen.get(src, 0) + 1
+                picked.append(it)
+            else:
+                spare.append(it)
+        sections[s] = (picked + spare)[:per]
     return lead, top, sections
 
 

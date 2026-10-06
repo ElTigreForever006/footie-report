@@ -1040,6 +1040,7 @@
   "tv_rows_front": 8,
   "pod_rows_front": 12,
   "section_limit": 7,
+  "max_per_source": 3,
   "womens_section": "Women's Football",
   "womens_terms": [
     "women",
