@@ -1388,6 +1388,7 @@
     }
   ],
   "tv_rows_front": 8,
+  "tv_rows_top": 5,
   "pod_rows_front": 12,
   "section_limit": 7,
   "max_per_source": 3,

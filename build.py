@@ -537,6 +537,48 @@ def wmark(f):
     return ' <span class="w">(w)</span>' if f.get("women") else ""
 
 
+def render_tv_strip(fixtures, cfg):
+    """A short band of kickoffs for the top of the front page. The full ON TV panel lower
+    down keeps the week; this one answers "is there football on right now?" before the
+    reader has scrolled anything -- the only errand on the site they have every day."""
+    if not fixtures:
+        return ""
+    tz = tz_of(cfg)
+    now = datetime.now(tz)
+    cap = cfg.get("tv_rows_top", 5)
+    # a match in progress is the most useful row on the page; one that finished is the
+    # least, so the strip carries live and upcoming games and leaves full-times below.
+    pick = [f for f in fixtures if f["state"] == "in"]
+    pick += [f for f in fixtures if f["state"] == "pre" and f["kick"].date() == now.date()
+             and f["kick"] >= now - timedelta(minutes=15)]
+    label = "ON TV TODAY"
+    if len(pick) < cap:
+        # late evening, or a quiet midweek: reach into the following days rather than
+        # leave a near-empty table at the top of the page
+        later = [f for f in fixtures if f["state"] == "pre" and f["kick"].date() > now.date()]
+        if later:
+            pick += later
+            label = "NEXT ON TV"
+    pick = pick[:cap]
+    if not pick:
+        return ""
+    rows = []
+    for f in pick:
+        running = f["state"] == "in"
+        when = f["detail"] if running else f["kick"].strftime("%-I:%M %p")
+        score = f' <b>{e(f["score"])}</b>' if f["score"] else ""
+        rows.append(
+            f'<tr data-utc="{utc_attr(f["kick"])}">'
+            f'<td class="t"{"" if running else " data-time"}>{e(when)}</td>'
+            f'<td class="m">{e(f["away"])} at {e(f["home"])}{wmark(f)}{score}</td>'
+            f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
+    zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
+    return (f'<section class="tvnow">'
+            f'<h2><span class="tvnow-label">{label}</span> <span class="tz">{e(zone)}</span></h2>'
+            f'<table>{"".join(rows)}</table>'
+            f'<p class="note"><a href="/how-to-watch.html">Full schedule &rarr;</a></p></section>')
+
+
 def render_tv(fixtures, cfg, limit=None):
     if not fixtures:
         return ""
@@ -666,6 +708,18 @@ try{
       if(anchor){sec.insertBefore(h,anchor); sec.insertBefore(t,anchor);} else {sec.appendChild(h); sec.appendChild(t);}
     });
   });
+
+  var strip=document.querySelector('.tvnow');
+  if(strip){
+    var srows=strip.querySelectorAll('tr[data-utc]'), allToday=srows.length>0;
+    Array.prototype.forEach.call(srows,function(tr){
+      var d=new Date(tr.getAttribute('data-utc')); if(isNaN(d)){allToday=false;return;}
+      var c=tr.querySelector('td.t[data-time]'); if(c) c.textContent=clock(d);
+      if(key(d)!==todayK) allToday=false;
+    });
+    var lab=strip.querySelector('.tvnow-label');
+    if(lab&&!allToday) lab.textContent='NEXT ON TV';
+  }
 
   var a=abbr(now);
   Array.prototype.forEach.call(document.querySelectorAll('.tz'),function(n){n.textContent=a;});
@@ -881,6 +935,9 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
             'document.getElementById("counter").hidden=false;})'
             '.catch(function(){});</script>')
 
+    tv_strip = render_tv_strip(fixtures or [], cfg)
+    strip_html = f"{tv_strip}\n<hr>\n" if tv_strip else ""
+
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -904,7 +961,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
   <div class="tagline">{e(cfg["tagline"])} &middot; <span id="upd">Updated {updated}</span></div>
 </header>
 <hr>
-<main class="cols">
+{strip_html}<main class="cols">
   <div class="col">{column(cols["left"])}</div>
   <div class="col">{column(cols["center"])}</div>
   <div class="col">{column(cols["right"])}</div>
