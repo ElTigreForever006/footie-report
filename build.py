@@ -701,7 +701,7 @@ def page_shell(cfg, title, description, body, canonical=""):
 <p class="crumb"><a href="/">&larr; {e(cfg["site_name"])}</a></p>
 {body}
 <footer>Listings are for the United States and can change; check your provider.
-<br>{e(cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+<br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
 {TZ_SCRIPT}
 </body>
 </html>
@@ -791,7 +791,7 @@ def tables_page(cfg, tables):
 <body>
 <p><a href="/">&larr; Back to headlines</a></p>
 {render_tables(tables, cfg)}
-<footer>Standings via ESPN. {e(cfg["site_name"])}</footer>
+<footer>Standings via ESPN. &copy; {e(cfg.get("legal_name") or cfg["site_name"])}</footer>
 </body>
 </html>
 """
@@ -830,7 +830,7 @@ def podcasts_page(cfg):
 <p class="lede">The shows we actually listen to. Links open on Apple Podcasts or Spotify.</p>
 <table>{"".join(rows)}</table>
 </section>
-<footer>{e(cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+<footer>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
 </body>
 </html>
 """
@@ -920,7 +920,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <footer>
   {counter_html}
   Headlines link to their original publishers; all stories &copy; their respective owners.
-  <br>{e(cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
+  <br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
 </footer>
 {TZ_SCRIPT}
 </body>
