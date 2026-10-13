@@ -987,7 +987,6 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="300">
 <title>{e(cfg["site_name"])} – {e(cfg["tagline"])}</title>
 <meta name="description" content="{e(cfg["tagline"])}">
 <link rel="canonical" href="https://{e(cfg["domain"])}/">
