@@ -514,7 +514,9 @@ def e(s):
 def link(it, big=False):
     cls = "hot" if it.get("hot") else ""
     src = f' <span class="src">{e(it["source"])}</span>' if it.get("source") and not big else ""
-    return f'<a class="{cls}" href="{e(it["url"])}" target="_blank" rel="noopener">{e(it["title"])}</a>{src}'
+    sec = f' data-sec="{evslug(it.get("section"))}"' if it.get("section") else ""
+    return (f'<a class="{cls}" href="{e(it["url"])}" target="_blank" rel="noopener"{sec}>'
+            f'{e(it["title"])}</a>{src}')
 
 
 def ad_slot(cfg, name):
@@ -523,7 +525,7 @@ def ad_slot(cfg, name):
         # Until a network fills these, the empty inventory sells itself.
         email = cfg.get("ad_email") or "info@footiereport.com"
         subject = urllib.parse.quote(f'Advertising on {cfg.get("site_name", "The Footie Report")}')
-        return (f'<a class="ad ad-house" href="mailto:{e(email)}?subject={subject}">'
+        return (f'<a class="ad ad-house" data-ev="advertise" href="mailto:{e(email)}?subject={subject}">'
                 f'<span class="ad-house-h">ADVERTISE HERE</span>'
                 f'<span class="ad-house-s">Reach football fans all day, every day</span>'
                 f'<span class="ad-house-c">{e(email)}</span></a>')
@@ -576,7 +578,7 @@ def render_tv_strip(fixtures, cfg):
     return (f'<section class="tvnow">'
             f'<h2><span class="tvnow-label">{label}</span> <span class="tz">{e(zone)}</span></h2>'
             f'<table>{"".join(rows)}</table>'
-            f'<p class="note"><a href="/how-to-watch.html">Full schedule &rarr;</a></p></section>')
+            f'<p class="note"><a href="/how-to-watch.html" data-ev="tv-strip-full-schedule">Full schedule &rarr;</a></p></section>')
 
 
 def render_tv(fixtures, cfg, limit=None):
@@ -608,7 +610,7 @@ def render_tv(fixtures, cfg, limit=None):
     tail = f"{more} more &middot; " if more > 0 else ""
     return (f'<section class="tv"><h2>ON TV <span class="tz">{e(zone)}</span></h2>{"".join(blocks)}'
             f'<p class="note">{tail}'
-            f'<a href="/how-to-watch.html">Full week and channels &rarr;</a></p></section>')
+            f'<a href="/how-to-watch.html" data-ev="full-week">Full week and channels &rarr;</a></p></section>')
 
 
 def render_pods_panel(cfg):
@@ -737,6 +739,51 @@ try{
 </script>"""
 
 
+def evslug(s):
+    """Event names have to be stable across builds, so a section or channel becomes a
+    fixed slug rather than whatever punctuation the source happened to use."""
+    return re.sub(r"(^-|-$)", "", re.sub(r"[^a-z0-9]+", "-", (s or "").lower()))[:40]
+
+
+def head_analytics(cfg):
+    """The counter belongs on every page. It used to sit only on the front one, which
+    meant the tables, the podcasts and every how-to-watch page were invisible."""
+    out = ""
+    if cfg.get("goatcounter_code"):
+        out += (f'<script data-goatcounter="https://{e(cfg["goatcounter_code"])}.goatcounter.com/count" '
+                f'async src="//gc.zgo.at/count.js"></script>\n')
+    if cfg.get("google_analytics_id"):
+        ga = e(cfg["google_analytics_id"])
+        out += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ga}"></script>'
+                f"<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}}"
+                f"gtag('js',new Date());gtag('config','{ga}');</script>\n")
+    return out
+
+
+# Which headline a reader opens is the only read we have on whether the curation works,
+# and the first thing an advertiser asks about. Every outbound link opens in a new tab, so
+# the page survives the click and the beacon gets away before anything unloads.
+CLICK_SCRIPT = """<script>
+(function(){
+  document.addEventListener('click',function(ev){
+    var a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null; if(!a) return;
+    var gc=window.goatcounter; if(!gc||!gc.count) return;
+    // a named link is counted whatever its scheme: the advertise box is a mailto, and
+    // whether anyone ever clicks it is the whole point of having put it there
+    var id=a.getAttribute('data-ev');
+    if(id){gc.count({path:'nav-'+id,title:'Followed: '+id,event:true}); return;}
+    var u; try{u=new URL(a.getAttribute('href'),location.href);}catch(e){return;}
+    if(u.protocol!=='http:'&&u.protocol!=='https:') return;
+    if(u.host===location.host) return;
+    var host=u.host.replace(/^www\./,'');
+    gc.count({path:'pub-'+host,title:'Read on '+host,event:true});
+    var sec=a.getAttribute('data-sec');
+    if(sec) gc.count({path:'sec-'+sec,title:'Section: '+sec,event:true});
+  },true);
+})();
+</script>"""
+
+
 def page_shell(cfg, title, description, body, canonical=""):
     can = f'<link rel="canonical" href="https://{e(cfg["domain"])}/{e(canonical)}">' if cfg.get("domain") else ""
     return f"""<!doctype html>
@@ -750,13 +797,14 @@ def page_shell(cfg, title, description, body, canonical=""):
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(description)}">
 <link rel="stylesheet" href="/style.css">
-</head>
+{head_analytics(cfg)}</head>
 <body>
 <p class="crumb"><a href="/">&larr; {e(cfg["site_name"])}</a></p>
 {body}
 <footer>Listings are for the United States and can change; check your provider.
 <br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
 {TZ_SCRIPT}
+{CLICK_SCRIPT}
 </body>
 </html>
 """
@@ -841,11 +889,12 @@ def tables_page(cfg, tables):
 <title>League tables &middot; {e(cfg["site_name"])}</title>
 <meta name="description" content="Current standings for the top European leagues and MLS.">
 <link rel="stylesheet" href="style.css">
-</head>
+{head_analytics(cfg)}</head>
 <body>
 <p><a href="/">&larr; Back to headlines</a></p>
 {render_tables(tables, cfg)}
 <footer>Standings via ESPN. &copy; {e(cfg.get("legal_name") or cfg["site_name"])}</footer>
+{CLICK_SCRIPT}
 </body>
 </html>
 """
@@ -876,7 +925,7 @@ def podcasts_page(cfg):
 <meta name="description" content="A curated list of the best world football podcasts, with links to listen on Apple Podcasts and Spotify.">
 <link rel="canonical" href="https://{e(cfg["domain"])}/podcasts.html">
 <link rel="stylesheet" href="style.css">
-</head>
+{head_analytics(cfg)}</head>
 <body>
 <p class="crumb"><a href="/">&larr; Back to headlines</a></p>
 <section class="pods">
@@ -885,6 +934,7 @@ def podcasts_page(cfg):
 <table>{"".join(rows)}</table>
 </section>
 <footer>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+{CLICK_SCRIPT}
 </body>
 </html>
 """
@@ -896,13 +946,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
     if cfg.get("adsense_client"):
         head_scripts += (f'<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={e(cfg["adsense_client"])}" '
                          f'crossorigin="anonymous"></script>\n')
-    if cfg.get("goatcounter_code"):
-        head_scripts += (f'<script data-goatcounter="https://{e(cfg["goatcounter_code"])}.goatcounter.com/count" '
-                         f'async src="//gc.zgo.at/count.js"></script>\n')
-    if cfg.get("google_analytics_id"):
-        ga = e(cfg["google_analytics_id"])
-        head_scripts += (f'<script async src="https://www.googletagmanager.com/gtag/js?id={ga}"></script>'
-                         f"<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments)}}gtag('js',new Date());gtag('config','{ga}');</script>\n")
+    head_scripts += head_analytics(cfg)
 
     def column(names):
         parts = []
@@ -980,6 +1024,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
   <br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
 </footer>
 {TZ_SCRIPT}
+{CLICK_SCRIPT}
 </body>
 </html>
 """
