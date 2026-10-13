@@ -539,6 +539,25 @@ def wmark(f):
     return ' <span class="w">(w)</span>' if f.get("women") else ""
 
 
+def channel_cell(tv, cfg, link=True):
+    """The channel column. Only services a reader can subscribe to directly are linked:
+    "Peacock" pointing at Peacock is a fact, where pointing "USA Network" at a live-TV
+    bundle would be a claim about carriage that changes by season and by zip code. An
+    unmapped channel stays plain text rather than guessing somewhere to send people."""
+    if not tv:
+        return "&mdash;"
+    urls = cfg.get("channel_links") or {}
+    rel = cfg.get("channel_link_rel", "nofollow noopener")
+    out = []
+    for name in (n.strip() for n in tv.split(",")):
+        if not name:
+            continue
+        url = urls.get(name) if link else None
+        out.append(f'<a href="{e(url)}" target="_blank" rel="{e(rel)}" '
+                   f'data-ev="tv-{evslug(name)}">{e(name)}</a>' if url else e(name))
+    return ", ".join(out) or "&mdash;"
+
+
 def render_tv_strip(fixtures, cfg):
     """A short band of kickoffs for the top of the front page. The full ON TV panel lower
     down keeps the week; this one answers "is there football on right now?" before the
@@ -603,7 +622,7 @@ def render_tv(fixtures, cfg, limit=None):
                 f'<tr data-utc="{utc_attr(f["kick"])}">'
                 f'<td class="t"{"" if live else " data-time"}>{e(when)}</td>'
                 f'<td class="m">{e(f["away"])} at {e(f["home"])}{wmark(f)}{score}</td>'
-                f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
+                f'<td class="c">{channel_cell(f["tv"], cfg)}</td></tr>')
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
     zone = "ET" if cfg.get("timezone", "America/New_York") == "America/New_York" else ""
     more = len(fixtures) - len(shown)
@@ -833,7 +852,7 @@ def watch_pages(cfg, fixtures):
                 f'<td class="t" data-time>{e(f["kick"].strftime("%-I:%M %p"))}</td>'
                 f'<td class="m"><a href="/watch/{e(slug)}.html">{e(match)}</a>{wmark(f)} '
                 f'<span class="src">{e(f["league"])}</span></td>'
-                f'<td class="c">{e(f["tv"]) or "&mdash;"}</td></tr>')
+                f'<td class="c">{channel_cell(f["tv"], cfg)}</td></tr>')
             pages[f"watch/{slug}.html"] = match_page(cfg, f, slug)
         blocks.append(f'<h3>{e(label)}</h3><table>{"".join(rows)}</table>')
 
@@ -863,7 +882,7 @@ def match_page(cfg, f, slug):
 <tr><td>Date</td><td>{e(when)}</td></tr>
 <tr><td>Kickoff</td><td>{e(zone_times(f["kick"], cfg))}</td></tr>
 <tr hidden><td>Your time</td><td class="localtime" data-utc="{utc_attr(f["kick"])}"></td></tr>
-<tr><td>US TV / stream</td><td>{e(tv)}</td></tr>
+<tr><td>US TV / stream</td><td>{channel_cell(f["tv"], cfg) if f["tv"] else e(tv)}</td></tr>
 </table>
 <p class="note">Times and channels come from the published schedule and can change.
 See the <a href="/how-to-watch.html">full week of fixtures</a> or
