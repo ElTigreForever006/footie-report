@@ -2,7 +2,11 @@ name: Build & deploy headlines
 
 on:
   schedule:
-    - cron: "*/15 * * * *"   # every 15 minutes (GitHub may delay runs a few minutes at busy times)
+    # Not */15: that fires at :00, :15, :30 and :45, the four busiest minutes on
+    # GitHub, where scheduled runs get queued behind everyone else's and dropped.
+    # Odd minutes are far less contended. Scheduled runs are best-effort either
+    # way, so the page shows its real build time rather than a promise.
+    - cron: "7,22,37,52 * * * *"
   push:
     branches: [main]         # rebuild immediately when you edit pinned.json or config.json
   workflow_dispatch: {}      # "Run workflow" button for manual refresh
