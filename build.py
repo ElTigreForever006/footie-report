@@ -310,6 +310,16 @@ def words(title):
     return set(stem(t) for t in toks if len(t) > 2 and t not in STOP)
 
 
+SCORE_RE = re.compile(r"\b(\d{1,2})\s*[-\u2013]\s*(\d{1,2})\b")
+
+
+def scoreline(title):
+    """Two reports of the same match almost always carry the same score, and the word
+    tokenizer throws digits away -- which is how two accounts of "Barcelona 1-2 Real
+    Madrid" came to sit side by side in the Spain column."""
+    return {f"{a}-{b}" for a, b in SCORE_RE.findall(title)}
+
+
 def doc_freq(sigs):
     """How many headlines each word appears in -- rare words are the distinctive ones."""
     df = {}
@@ -319,7 +329,7 @@ def doc_freq(sigs):
     return df
 
 
-def is_dupe(wa, wb, df, rare_max=3):
+def is_dupe(wa, wb, df, rare_max=3, sa=None, sb=None):
     """Two accounts of one story. Shared *rare* words (names, clubs) carry the signal;
     plain word overlap is unreliable when a wire brief meets a 30-word tabloid headline,
     so containment against the shorter headline matters more than symmetric overlap."""
@@ -328,6 +338,9 @@ def is_dupe(wa, wb, df, rare_max=3):
     inter = wa & wb
     if not inter:
         return False
+    # an identical scoreline plus any two shared words is as close to proof as we get
+    if sa and sb and (sa & sb) and len(inter) >= 2:
+        return True
     jaccard = len(inter) / len(wa | wb)
     if jaccard >= 0.50:
         return True
@@ -340,6 +353,11 @@ def is_dupe(wa, wb, df, rare_max=3):
     if rare >= 2 and jaccard >= 0.22:
         return True
     if rare >= 2 and contain >= 0.55:
+        return True
+    # four distinctive words in common is a strong signal even when the two headlines are
+    # written at very different lengths ("Carrick future LIVE: board hold crisis talks"
+    # against "Ratcliffe accelerates Carrick sack plan")
+    if rare >= 4 and jaccard >= 0.15:
         return True
     return rare >= 3 and contain >= 0.50
 
@@ -416,10 +434,13 @@ def curate(items, cfg, pinned):
     # no wording with each other while both plainly match a third.
     fresh.sort(key=lambda x: -x["score"])
     sigs = [words(f["title"]) for f in fresh]
+    scos = [scoreline(f["title"]) for f in fresh]
     df = doc_freq(sigs)
     # "rare" has to scale with the batch: on a busy night Ireland and Israel appear in a
     # dozen headlines and stop being distinctive at all.
-    rare_max = max(3, min(8, len(fresh) // 50))
+    # The old ceiling was so tight that on Clasico day "barcelona" and "madrid" stopped
+    # counting as distinctive, so the dedup went blind to the one story everyone covered.
+    rare_max = max(6, min(12, len(fresh) // 25))
     parent = list(range(len(fresh)))
 
     def find(i):
@@ -440,7 +461,8 @@ def curate(items, cfg, pinned):
             union(i, first)
     for i in range(len(fresh)):
         for j in range(i + 1, len(fresh)):
-            if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df, rare_max):
+            if find(i) != find(j) and is_dupe(sigs[i], sigs[j], df, rare_max,
+                                              scos[i], scos[j]):
                 union(i, j)
 
     # A story carried by both a women's feed and a general one is a women's story whichever
@@ -493,13 +515,21 @@ def curate(items, cfg, pinned):
     # stories and no German or French ones. Take up to `cap` from any one source first,
     # then let the overflow back in, so a genuinely one-outlet day still fills the column.
     cap = cfg.get("max_per_source", 3)
+    topic_cap = cfg.get("max_per_topic", 2)
     for s in sections:
-        picked, spare, seen = [], [], {}
+        picked, spare, seen, psigs = [], [], {}, []
         for it in sections[s]:
             src = (it.get("source") or "").strip().lower()
-            if seen.get(src, 0) < cap:
+            sig = words(it["title"])
+            # Two accounts of one weekend's derby are not duplicates, but five of them
+            # are a column about nothing else -- which is how Americas came to spend
+            # five of seven slots on LAFC against the Galaxy.
+            near = sum(1 for q in psigs
+                       if sig and q and len(sig & q) / len(sig | q) >= 0.18)
+            if seen.get(src, 0) < cap and near < topic_cap:
                 seen[src] = seen.get(src, 0) + 1
                 picked.append(it)
+                psigs.append(sig)
             else:
                 spare.append(it)
         sections[s] = (picked + spare)[:per]

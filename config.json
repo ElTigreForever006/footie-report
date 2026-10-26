@@ -926,7 +926,13 @@
     "odds and predictions",
     "prop bets",
     "betting offer",
-    "sign-up offer"
+    "sign-up offer",
+    "how to watch",
+    "live stream",
+    "tv channel",
+    "where to watch",
+    "game analysis",
+    "fixtures, results"
   ],
   "football_terms": [
     "football",
@@ -1402,6 +1408,7 @@
   "pod_rows_front": 12,
   "section_limit": 7,
   "max_per_source": 3,
+  "max_per_topic": 2,
   "womens_section": "Women's Football",
   "womens_terms": [
     "women",
