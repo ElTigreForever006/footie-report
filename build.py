@@ -894,6 +894,43 @@ CLICK_SCRIPT = """<script>
 </script>"""
 
 
+def social_meta(cfg, title, description, path=""):
+    """Without these a shared link is a bare line of text. The og: tags cover Slack,
+    iMessage, LinkedIn and Facebook; the twitter: pair picks the card shape and credits
+    the account, which is what makes someone else's post point back here."""
+    domain = cfg.get("domain")
+    if not domain:
+        return ""
+    base = f"https://{e(domain)}"
+    img = cfg.get("share_image")
+    out = ['<meta property="og:type" content="website">',
+           f'<meta property="og:site_name" content="{e(cfg["site_name"])}">',
+           f'<meta property="og:url" content="{base}/{e(path)}">',
+           f'<meta name="twitter:title" content="{e(title)}">',
+           f'<meta name="twitter:description" content="{e(description)}">']
+    if cfg.get("x_handle"):
+        out.append(f'<meta name="twitter:site" content="{e(cfg["x_handle"])}">')
+    if img:
+        out += [f'<meta property="og:image" content="{base}/{e(img)}">',
+                '<meta property="og:image:width" content="1200">',
+                '<meta property="og:image:height" content="630">',
+                f'<meta name="twitter:image" content="{base}/{e(img)}">',
+                '<meta name="twitter:card" content="summary_large_image">']
+    else:
+        out.append('<meta name="twitter:card" content="summary">')
+    return "\n".join(out) + "\n"
+
+
+def x_link(cfg):
+    """One plain link, no widget: the embed would be the heaviest thing on the page and
+    would set cookies the privacy policy says we do not."""
+    h = cfg.get("x_handle")
+    if not h:
+        return ""
+    return (f' &middot; <a href="https://x.com/{e(h.lstrip("@"))}" target="_blank" '
+            f'rel="noopener" data-ev="x-profile">{e(h)}</a>')
+
+
 def page_shell(cfg, title, description, body, canonical=""):
     can = f'<link rel="canonical" href="https://{e(cfg["domain"])}/{e(canonical)}">' if cfg.get("domain") else ""
     return f"""<!doctype html>
@@ -906,13 +943,13 @@ def page_shell(cfg, title, description, body, canonical=""):
 {can}
 <meta property="og:title" content="{e(title)}">
 <meta property="og:description" content="{e(description)}">
-<link rel="stylesheet" href="/style.css">
+{social_meta(cfg, title, description, canonical)}<link rel="stylesheet" href="/style.css">
 {head_analytics(cfg)}</head>
 <body>
 <p class="crumb"><a href="/">&larr; {e(cfg["site_name"])}</a></p>
 {body}
 <footer>Listings are for the United States and can change; check your provider.
-<br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a></footer>
+<br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="/about.html">About</a>{x_link(cfg)}</footer>
 {TZ_SCRIPT}
 {CLICK_SCRIPT}
 </body>
@@ -1102,6 +1139,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <link rel="canonical" href="https://{e(cfg["domain"])}/">
 <meta property="og:title" content="{e(cfg["site_name"])}">
 <meta property="og:description" content="{e(lead["title"] if lead else cfg["tagline"])}">
+{social_meta(cfg, cfg["site_name"], lead["title"] if lead else cfg["tagline"])}
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
 <link rel="stylesheet" href="style.css">
 {head_scripts}</head>
@@ -1130,7 +1168,7 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 <footer>
   {counter_html}
   Headlines link to their original publishers; all stories &copy; their respective owners.
-  <br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>
+  <br>&copy; {e(cfg.get("legal_name") or cfg["site_name"])} &middot; <a href="podcasts.html">Podcasts</a> &middot; <a href="about.html">About / Contact / Privacy</a>{x_link(cfg)}
 </footer>
 {TZ_SCRIPT}
 {CLICK_SCRIPT}
