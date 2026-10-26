@@ -72,6 +72,66 @@ def find_image(el):
     return None
 
 
+# ---------------------------------------------------------------- headline tidying
+LEAD_LABELS = {"just in","video","watch","gallery","photos","opinion","report","revealed",
+               "exclusive","breaking","paper talk","transfer news","transfer rumors",
+               "transfer rumours","transfer talk","transfer rumors, news"}
+# Subordinate joints. A tabloid headline is often two headlines welded at one of these,
+# and the news is on the left. " and " is deliberately absent: it joins verbs as often
+# as it welds clauses, and cutting there loses the point of the sentence.
+SEAMS = (" ... ", " .. ", " -- ", " — ", " – ", " as ", " after ", " amid ",
+         " while ", " but ", " despite ", " ahead of ", " following ", " with ")
+FURNITURE = r"(news|latest news|official site|home|football|sport|soccer)"
+
+
+def tidy_title(title, source="", cap=95, floor=40):
+    """Strip the publisher's furniture, then unweld the tabloids. A long headline is
+    rarely long because it says more -- it is two headlines joined at a conjunction, or a
+    pull-quote with the actual news behind it. Cut at a joint so what is left is a whole
+    clause, and leave the headline alone when there is no safe place to cut: a sentence
+    chopped mid-thought with an ellipsis reads worse than a long one."""
+    t = (title or "").strip()
+    # trailing site furniture and repeated bylines -- the source already has its own column
+    t = re.sub(r"\s*[|•]\s*" + FURNITURE + r"\s*$", "", t, flags=re.I)
+    t = re.sub(r"\s*[|•]\s*" + FURNITURE + r"\s*$", "", t, flags=re.I)
+    t = re.sub(r"\s*[-|–—]\s*\S+\.(com|co\.uk|net|org|ie|us|tv|news|io|fm)\s*$", "", t, flags=re.I)
+    if source:
+        t = re.sub(r"\s*[-|–—]\s*" + re.escape(source) + r"\s*$", "", t, flags=re.I)
+    # leading label: "Revealed: how ..." says nothing the headline doesn't
+    m = re.match(r"\s*([A-Za-z][A-Za-z',\s]{2,24}?)\s*:\s*(\S.*)$", t, flags=re.S)
+    if m and m.group(1).strip().lower() in LEAD_LABELS and len(m.group(2)) >= 30:
+        t = m.group(2).strip()
+    t = re.sub(r"\s{2,}", " ", t).strip()
+    if len(t) <= cap:
+        return t
+    # a headline that opens with a long pull-quote: the reportable part is what follows it
+    q = re.match(r"\s*[“\"]\s*.{20,}?\s*[”\"]\s+(\S.*)$", t, flags=re.S)
+    if q and len(q.group(1)) >= floor:
+        t = q.group(1).strip()
+        if len(t) <= cap:
+            return t
+    # trailing attribution tacked on by the tabloids
+    t2 = re.sub(r",\s*[^,]{0,40}\b(report|reports|reported|claims|claimed|says|sources say)\s*$",
+                "", t, flags=re.I).strip()
+    if len(t2) >= floor:
+        t = t2
+    if len(t) <= cap:
+        return t
+    low = t.lower()
+    cands = set()
+    for seam in SEAMS:
+        i = low.find(seam)
+        while i >= 0:
+            if i >= floor:
+                cands.add(i)
+            i = low.find(seam, i + 1)
+    under = sorted(i for i in cands if i <= cap)
+    pick = under[-1] if under else (min(cands) if cands else None)
+    if pick is not None:
+        t = t[:pick].rstrip(" ,;:-–—.’'\"").strip()
+    return t
+
+
 def parse_feed(raw, feed):
     root = ET.fromstring(raw)
     items = []
@@ -104,6 +164,7 @@ def parse_feed(raw, feed):
             src_el = e.find("source")
             if src_el is not None and (src_el.text or "").strip():
                 source = clean(src_el.text)
+        title = tidy_title(title, source)
         items.append({
             "title": title,
             "url": link,
