@@ -460,6 +460,7 @@
     "Spain": [
       "la liga",
       "laliga",
+      "copa del rey",
       "real madrid",
       "barcelona",
       "barca",
@@ -1142,6 +1143,12 @@
       "table": true
     },
     {
+      "code": "esp.copa_del_rey",
+      "name": "Copa del Rey",
+      "tv": true,
+      "table": false
+    },
+    {
       "code": "ita.1",
       "name": "Serie A",
       "tv": true,
@@ -1178,6 +1185,12 @@
       "table": false
     },
     {
+      "code": "uefa.europa.conf",
+      "name": "Conference League",
+      "tv": true,
+      "table": false
+    },
+    {
       "code": "usa.1",
       "name": "MLS",
       "tv": true,
@@ -1193,6 +1206,18 @@
     {
       "code": "eng.2",
       "name": "Championship",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "eng.league_cup",
+      "name": "EFL Cup",
+      "tv": true,
+      "table": false
+    },
+    {
+      "code": "eng.fa",
+      "name": "FA Cup",
       "tv": true,
       "table": false
     },
