@@ -749,6 +749,22 @@ def render_pods_panel(cfg):
             f'<p class="note"><a href="/podcasts.html">All shows &rarr;</a></p></section>')
 
 
+def render_links(cfg):
+    """A standing column of where the football actually comes from. No feeds, nothing to
+    go stale on its own -- and the click tracking will say which of them earn the space."""
+    cols = cfg.get("link_columns") or {}
+    if not cols:
+        return ""
+    blocks = []
+    for heading, rows in cols.items():
+        items = "".join(
+            f'<li><a href="{e(url)}" target="_blank" rel="noopener">{e(name)}</a></li>'
+            for name, url in rows)
+        blocks.append(f'<div class="linkcol"><h3>{e(heading)}</h3><ul>{items}</ul></div>')
+    return (f'<section class="links"><h2>SOURCES &amp; REFERENCE</h2>'
+            f'<div class="linkgrid">{"".join(blocks)}</div></section>')
+
+
 def render_tables(tables, cfg, limit=None):
     if not tables:
         return ""
@@ -1172,6 +1188,8 @@ def render(cfg, lead, top, sections, fixtures=None, tables=None):
 </div>
 <hr>
 {render_tables(tables or [], cfg, limit=cfg.get("table_rows_front", 6))}
+<hr>
+{render_links(cfg)}
 {ad_slot(cfg, "bottom")}
 <footer>
   {counter_html}

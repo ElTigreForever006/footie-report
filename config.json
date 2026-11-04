@@ -1505,5 +1505,135 @@
   ],
   "legal_name": "The Footie Report, LLC",
   "x_handle": "@Footie_Report",
-  "share_image": "share-card.jpg"
+  "share_image": "share-card.jpg",
+  "link_columns": {
+    "NEWS": [
+      [
+        "BBC Sport",
+        "https://www.bbc.com/sport/football"
+      ],
+      [
+        "Guardian",
+        "https://www.theguardian.com/football"
+      ],
+      [
+        "Sky Sports",
+        "https://www.skysports.com/football"
+      ],
+      [
+        "ESPN",
+        "https://www.espn.com/soccer/"
+      ],
+      [
+        "The Athletic",
+        "https://www.nytimes.com/athletic/football/"
+      ],
+      [
+        "Football Italia",
+        "https://www.football-italia.net/"
+      ],
+      [
+        "Marca",
+        "https://www.marca.com/en/football.html"
+      ],
+      [
+        "talkSPORT",
+        "https://talksport.com/football/"
+      ],
+      [
+        "FourFourTwo",
+        "https://www.fourfourtwo.com/"
+      ],
+      [
+        "CaughtOffside",
+        "https://www.caughtoffside.com/"
+      ],
+      [
+        "90min",
+        "https://www.90min.com/"
+      ],
+      [
+        "Goal",
+        "https://www.goal.com/en-us"
+      ]
+    ],
+    "STATS & DATA": [
+      [
+        "Transfermarkt",
+        "https://www.transfermarkt.us/"
+      ],
+      [
+        "FotMob",
+        "https://www.fotmob.com/"
+      ],
+      [
+        "SofaScore",
+        "https://www.sofascore.com/football"
+      ],
+      [
+        "WhoScored",
+        "https://www.whoscored.com/"
+      ],
+      [
+        "Understat",
+        "https://understat.com/"
+      ],
+      [
+        "Soccerway",
+        "https://us.soccerway.com/"
+      ],
+      [
+        "The Analyst",
+        "https://theanalyst.com/"
+      ]
+    ],
+    "LEAGUES": [
+      [
+        "Premier League",
+        "https://www.premierleague.com/"
+      ],
+      [
+        "La Liga",
+        "https://www.laliga.com/en-GB"
+      ],
+      [
+        "Serie A",
+        "https://www.legaseriea.it/en"
+      ],
+      [
+        "Bundesliga",
+        "https://www.bundesliga.com/en/bundesliga"
+      ],
+      [
+        "Ligue 1",
+        "https://ligue1.com/"
+      ],
+      [
+        "Eredivisie",
+        "https://eredivisie.nl/"
+      ],
+      [
+        "MLS",
+        "https://www.mlssoccer.com/"
+      ],
+      [
+        "NWSL",
+        "https://www.nwslsoccer.com/"
+      ]
+    ],
+    "GOVERNING BODIES": [
+      [
+        "UEFA",
+        "https://www.uefa.com/"
+      ],
+      [
+        "FIFA",
+        "https://inside.fifa.com/"
+      ],
+      [
+        "CONCACAF",
+        "https://www.concacaf.com/"
+      ]
+    ]
+  }
 }
