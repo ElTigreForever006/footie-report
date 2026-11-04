@@ -177,6 +177,8 @@ def parse_feed(raw, feed):
             "womens": feed.get("womens", False),  # women's-only feed: section is not negotiable
             # broad search feed: its section is a hint, not a claim (see curate)
             "needs_match": feed.get("needs_match", False),
+            # a reader should know before clicking, not after
+            "paywall": feed.get("paywall", False),
         })
     return items
 
@@ -551,12 +553,15 @@ def curate(items, cfg, pinned):
     else:
         # no image preference: publishers' photos are not ours to display, so the
         # lead is simply the strongest story (see render() -- images are not emitted)
-        lead = kept[0] if kept else None
+        # ...but not behind a paywall if anything else is available: the lede is the
+        # biggest click target on the page and a wall there is the worst first impression
+        lead = next((k for k in kept if not k.get("paywall")), kept[0] if kept else None)
     if lead in kept:
         kept.remove(lead)
 
     n_top = cfg.get("top_stories_count", 4)
-    top = [{"title": t["title"], "url": t["url"], "hot": t.get("hot", False), "source": ""}
+    top = [{"title": t["title"], "url": t["url"], "hot": t.get("hot", False), "source": "",
+            "paywall": t.get("paywall", False)}
            for t in pinned.get("top", []) if t.get("title") and t.get("url")]
     for k in kept:
         if len(top) >= n_top:
@@ -605,6 +610,9 @@ def e(s):
 def link(it, big=False):
     cls = "hot" if it.get("hot") else ""
     src = f' <span class="src">{e(it["source"])}</span>' if it.get("source") and not big else ""
+    # shown at every size, the lede included: that is the click most worth warning about
+    if it.get("paywall"):
+        src += ' <span class="pay" title="Subscription required">($)</span>'
     sec = f' data-sec="{evslug(it.get("section"))}"' if it.get("section") else ""
     return (f'<a class="{cls}" href="{e(it["url"])}" target="_blank" rel="noopener"{sec}>'
             f'{e(it["title"])}</a>{src}')

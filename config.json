@@ -351,6 +351,14 @@
       "pure": false,
       "strip_source": true,
       "needs_match": true
+    },
+    {
+      "url": "https://theathletic.com/football/?rss=1",
+      "name": "The Athletic",
+      "section": "Premier League",
+      "priority": 2,
+      "needs_match": true,
+      "paywall": true
     }
   ],
   "keyword_sections": {
