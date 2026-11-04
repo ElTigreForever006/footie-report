@@ -10,7 +10,7 @@ a:visited { color:var(--muted); }
 a.hot, a.hot:visited { color:var(--hot); }
 header { text-align:center; }
 ul { list-style:none; margin:0; padding:0; }
-ul.top { max-width:760px; margin:10px auto 18px; text-align:left; }
+ul.top { max-width:760px; margin:10px 0 18px; text-align:left; }
 ul.top li { margin:8px 0; font-size:19px; }
 .lead h1 { font: 700 clamp(28px, 5vw, 50px)/1.08 "Arial Black", Arial, Helvetica, sans-serif; text-transform:uppercase;
   margin:16px auto 22px; max-width:980px; }
@@ -26,6 +26,7 @@ hr { border:0; border-top:3px solid var(--rule); margin:12px 0; }
 .col li { padding:5px 0; border-bottom:1px dotted var(--rule); overflow-wrap:anywhere; }
 .col li:last-child { border-bottom:0; }
 .src { font:400 11px Arial, sans-serif; color:var(--muted); white-space:nowrap; }
+.pay { font:400 11px Arial, sans-serif; color:var(--muted); white-space:nowrap; }
 .ad { margin:14px auto; text-align:center; min-height:90px; }
 .ad-placeholder { display:flex; align-items:center; justify-content:center; border:1px dashed var(--muted);
   color:var(--muted); font:400 11px Arial, sans-serif; letter-spacing:2px; }
