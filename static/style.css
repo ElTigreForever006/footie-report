@@ -111,3 +111,12 @@ footer { text-align:center; font:400 12px Arial, sans-serif; color:var(--muted);
 .tvnow td.t { width:5.5em; white-space:nowrap; color:var(--muted); }
 .tvnow td.c { width:11em; text-align:right; font:400 12px Arial, sans-serif; color:var(--muted); }
 @media (max-width:620px) { .tvnow td.c { width:7em; } }
+
+/* Where the football comes from. Same auto-fit grid as the league tables. */
+.links { margin:14px 0 4px; }
+.links h2 { font:900 15px/1.2 Arial, Helvetica, sans-serif; text-transform:uppercase; letter-spacing:1px;
+  text-align:center; border-bottom:2px solid var(--rule); padding-bottom:3px; margin:0 0 10px; }
+.linkgrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:10px 22px; }
+.linkcol h3 { font:700 12px Arial, Helvetica, sans-serif; text-transform:uppercase; letter-spacing:1px;
+  color:var(--muted); margin:0 0 5px; }
+.linkcol li { padding:3px 0; border-bottom:1px dotted var(--rule); font-size:14px; }
