@@ -79,7 +79,7 @@ LEAD_LABELS = {"just in","video","watch","gallery","photos","opinion","report","
 # Subordinate joints. A tabloid headline is often two headlines welded at one of these,
 # and the news is on the left. " and " is deliberately absent: it joins verbs as often
 # as it welds clauses, and cutting there loses the point of the sentence.
-SEAMS = (" ... ", " .. ", " -- ", " — ", " – ", " as ", " after ", " amid ",
+SEAMS = (" ... ", " .. ", " -- ", " - ", " — ", " – ", " as ", " after ", " amid ",
          " while ", " but ", " despite ", " ahead of ", " following ", " with ")
 FURNITURE = r"(news|latest news|official site|home|football|sport|soccer)"
 
@@ -92,8 +92,24 @@ def tidy_title(title, source="", cap=95, floor=40):
     chopped mid-thought with an ellipsis reads worse than a long one."""
     t = (title or "").strip()
     # trailing site furniture and repeated bylines -- the source already has its own column
-    t = re.sub(r"\s*[|•]\s*" + FURNITURE + r"\s*$", "", t, flags=re.I)
-    t = re.sub(r"\s*[|•]\s*" + FURNITURE + r"\s*$", "", t, flags=re.I)
+    # Publishers chain their furniture rather than tacking on one word -- "Toluca 1-5
+    # Tigres: Liga MX Women Match Result | News | Football.com Nigeria" carries two
+    # segments, and the old pass only ever stripped a known word. Anything after a pipe
+    # is the publisher talking about itself, so take the tail off while a whole headline
+    # is still left standing in front of it.
+    for _ in range(3):
+        seg = re.match(r"^(.*?)\s*[|•]\s*([^|•]{1,32})\s*$", t, flags=re.S)
+        if not seg:
+            break
+        head, tail = seg.group(1).strip(), seg.group(2).strip()
+        if len(head) < floor:
+            break
+        if (re.fullmatch(FURNITURE, tail, flags=re.I)
+                or re.search(r"\.(com|co\.uk|net|org|ie|us|tv|news|io|fm)\b", tail, flags=re.I)
+                or len(tail.split()) <= 3):
+            t = head
+        else:
+            break
     t = re.sub(r"\s*[-|–—]\s*\S+\.(com|co\.uk|net|org|ie|us|tv|news|io|fm)\s*$", "", t, flags=re.I)
     if source:
         t = re.sub(r"\s*[-|–—]\s*" + re.escape(source) + r"\s*$", "", t, flags=re.I)
@@ -105,7 +121,10 @@ def tidy_title(title, source="", cap=95, floor=40):
     if len(t) <= cap:
         return t
     # a headline that opens with a long pull-quote: the reportable part is what follows it
-    q = re.match(r"\s*[“\"]\s*.{20,}?\s*[”\"]\s+(\S.*)$", t, flags=re.S)
+    # Single quotes count too, but only when the closing one is followed by a colon, a
+    # dash or plain space -- that is what separates a real pull-quote from the apostrophe
+    # in "Carrick's", which is what made an earlier version cut headlines mid-word.
+    q = re.match(r"\s*['‘“\"]\s*.{20,}?['’”\"]\s*[:\-–—]?\s+(\S.*)$", t, flags=re.S)
     if q and len(q.group(1)) >= floor:
         t = q.group(1).strip()
         if len(t) <= cap:
@@ -392,6 +411,24 @@ def doc_freq(sigs):
     return df
 
 
+# Football's own filler vocabulary. Rarity within one batch cannot tell a name from a
+# verb: on the day a story dominates, "pochettino" turns up in thirty headlines and the
+# rare-word test throws away the very word that identifies the story, which is how six
+# accounts of one sacking shared a column. Which words carry meaning is a property of
+# the language, not of today's feed, so the distinctive ones are found by discarding
+# this list instead of by counting.
+GENERIC_WORDS = """league premier champions europa transfer window season club clubs player
+players star stars manager managers boss deal deals signing sign signs move moves talk
+talks report reports news football soccer cup match matches game games win wins beat draw
+loss defeat goal goals first next new back set eye eyes keen want wants interest interested
+target targets link links amid despite after before ahead open opens hint hints say says
+said tell tells reveal reveals confirm confirms latest live update january summer worst
+best top return job jobs side team teams make made get got hope hopes keep still also
+could would should into over official sack sacked sacking exit appointed appoint"""
+# run through the same tokenizer, or the stems will never line up with a headline's
+GENERIC = {w for raw in GENERIC_WORDS.split() for w in words(raw)}
+
+
 def is_dupe(wa, wb, df, rare_max=3, sa=None, sb=None):
     """Two accounts of one story. Shared *rare* words (names, clubs) carry the signal;
     plain word overlap is unreliable when a wire brief meets a 30-word tabloid headline,
@@ -422,7 +459,15 @@ def is_dupe(wa, wb, df, rare_max=3, sa=None, sb=None):
     # against "Ratcliffe accelerates Carrick sack plan")
     if rare >= 4 and jaccard >= 0.15:
         return True
-    return rare >= 3 and contain >= 0.50
+    if rare >= 3 and contain >= 0.50:
+        return True
+    # Every test above this line leans on rarity, and rarity collapses on exactly the
+    # story that needs catching: once the day's big name is in thirty headlines it stops
+    # looking distinctive and six retellings sail through. This last test never consults
+    # the batch -- three words in common that are not football's filler vocabulary, with
+    # the shorter headline half inside the longer one, is one story told twice.
+    solid = inter - GENERIC
+    return len(solid) >= 3 and contain >= 0.50
 
 
 def curate(items, cfg, pinned):
@@ -598,7 +643,21 @@ def curate(items, cfg, pinned):
                 psigs.append(sig)
             else:
                 spare.append(it)
-        sections[s] = (picked + spare)[:per]
+        # The overflow fills a thin column, because a day with only one busy outlet
+        # should still fill its column -- but it used to come back wholesale, which made
+        # the topic cap no cap at all whenever a section had little else in it. Relax the
+        # per-source limit on the way back in and hold the topic limit firm: a short
+        # column beats a column that says the same thing seven times.
+        for it in spare:
+            if len(picked) >= per:
+                break
+            sig = words(it["title"])
+            near = sum(1 for q in psigs
+                       if sig and q and len(sig & q) / len(sig | q) >= 0.18)
+            if near < topic_cap:
+                picked.append(it)
+                psigs.append(sig)
+        sections[s] = picked[:per]
     return lead, top, sections
 
 

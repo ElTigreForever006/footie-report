@@ -941,7 +941,11 @@
     "tv channel",
     "where to watch",
     "game analysis",
-    "fixtures, results"
+    "fixtures, results",
+    "bets",
+    "betting",
+    "quiz",
+    "how to get"
   ],
   "football_terms": [
     "football",
@@ -1360,7 +1364,11 @@
     "ufc",
     "winter-olympics",
     "wrestling",
-    "wwe"
+    "wwe",
+    "quiz",
+    "tips",
+    "bet",
+    "bets"
   ],
   "podcasts": [
     {
