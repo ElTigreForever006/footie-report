@@ -618,13 +618,17 @@ def curate(items, cfg, pinned):
     # nothing about being women's football ("Pina hits four as Barcelona score seven").
     womens_roots = {find(i) for i, it in enumerate(fresh) if it.get("womens")}
 
-    # How many different outlets are telling this story. Breadth of coverage is the
-    # closest thing a wire of 46 feeds has to an editor's judgement: six outlets on a
-    # sacking is the lead, one outlet on a feature is not. Distinct sources, not items --
-    # counting items would let one prolific blog manufacture a lead out of nothing.
+    # How many different outlets are telling this story -- the closest thing a wire of 46
+    # feeds has to an editor's judgement. Two refinements, both learned the hard way:
+    # distinct sources rather than items, so one prolific blog cannot manufacture a lead;
+    # and established desks only, because every outlet alive carries a semifinal preview
+    # or a "who is showing the match" listing, while a real story starts with a few. The
+    # first cut counted everybody and put an NWSL preview above a Manchester United
+    # sacking. What marks the day's story is that the big desks all moved on it.
     breadth = {}
     for i, it in enumerate(fresh):
-        breadth.setdefault(find(i), set()).add((it.get("source") or "").strip().lower())
+        if it.get("priority", 1) >= 2:
+            breadth.setdefault(find(i), set()).add((it.get("source") or "").strip().lower())
 
     kept, seen_root = [], set()
     for i, it in enumerate(fresh):  # score-sorted, so the first of a cluster is the best
@@ -639,6 +643,10 @@ def curate(items, cfg, pinned):
     if len(fresh) != len(kept):
         print(f"Merged {len(fresh) - len(kept)} duplicate retellings.")
 
+    def pull(k):
+        """Score, plus a bonus for each established desk beyond the first on the story."""
+        return k["score"] + 1.5 * max(0, k.get("breadth", 1) - 1)
+
     # lead story
     lead_pin = pinned.get("lead") or {}
     if lead_pin.get("title") and lead_pin.get("url"):
@@ -648,12 +656,13 @@ def curate(items, cfg, pinned):
         # -- images are not emitted), and not behind a paywall if anything else is
         # available: the lede is the biggest click target on the page and a wall there is
         # the worst first impression.
-        # The lead is the most widely covered story, not the best-scoring single headline.
         # Score knows which outlet filed and how recently; it has no idea what the day's
         # story is, which is how a Barcelona feature came to sit above a Manchester United
-        # sacking. Breadth first, score to break the tie.
+        # sacking. Breadth of coverage supplies what score cannot -- but as a thumb on the
+        # scale, not as the whole decision. Sorting by breadth outright handed the page to
+        # whatever the most outlets happened to syndicate that hour.
         choices = [k for k in kept if not k.get("paywall")] or kept
-        lead = max(choices, key=lambda k: (k.get("breadth", 1), k["score"])) if choices else None
+        lead = max(choices, key=pull) if choices else None
     if lead in kept:
         kept.remove(lead)
 
@@ -661,9 +670,9 @@ def curate(items, cfg, pinned):
     top = [{"title": t["title"], "url": t["url"], "hot": t.get("hot", False), "source": "",
             "paywall": t.get("paywall", False)}
            for t in pinned.get("top", []) if t.get("title") and t.get("url")]
-    # The band above the masthead follows the lead's logic: widely covered first. A story
-    # three outlets are chasing earns its place there even from a low-priority feed.
-    for k in sorted(kept, key=lambda x: (-x.get("breadth", 1), -x["score"])):
+    # The band above the masthead follows the lead's logic. Three established desks on one
+    # story earns a place here even from a feed that would not otherwise qualify.
+    for k in sorted(kept, key=lambda x: -pull(x)):
         if len(top) >= n_top:
             break
         if k["hot"] or k["priority"] >= 2 or k.get("breadth", 1) >= 3:
