@@ -493,7 +493,7 @@ def curate(items, cfg, pinned):
     def has(term, text):
         return re.search(r"(?<![a-z])" + re.escape(term) + r"(?![a-z])", text) is not None
 
-    fresh = []
+    fresh, pending = [], []
     for it in items:
         if it["date"] and it["date"] < cutoff:
             continue
@@ -528,12 +528,51 @@ def curate(items, cfg, pinned):
             # its own section is only a hint. With nothing matched we cannot say where the
             # story belongs, and guessing is what put an England call-up under Italy.
             if not matched and it.get("needs_match"):
-                dropped += 1
+                pending.append(it)
                 continue
         it["hot"] = any(re.search(r"\b" + re.escape(h) + r"\b", low) for h in hot_words)
         age_h = ((now - it["date"]).total_seconds() / 3600) if it["date"] else 12
         it["score"] = it["priority"] * 2 + (4 if it["hot"] else 0) + max(0, 12 - age_h) / 2
         fresh.append(it)
+
+    def rate(it):
+        low = it["title"].lower()
+        it["hot"] = any(re.search(r"\b" + re.escape(h) + r"\b", low) for h in hot_words)
+        age_h = ((now - it["date"]).total_seconds() / 3600) if it["date"] else 12
+        it["score"] = it["priority"] * 2 + (4 if it["hot"] else 0) + max(0, 12 - age_h) / 2
+
+    # A headline that names a person and no club -- "The chaos that took Carrick from
+    # two-year deal to sacked within 15 games" -- matches no league keyword and used to be
+    # thrown away, which lost the best piece written on the day's biggest story. The batch
+    # itself knows who Carrick is: a name keeping company with headlines that routed
+    # confidently belongs where they went. Two sightings are required, so that a single
+    # coincidence cannot move a story, and a tie is still a drop -- guessing at a section
+    # is what once put an MLS story in the Premier League column.
+    names = {}
+    for it in fresh:
+        sec = it.get("section")
+        if not sec:
+            continue
+        for w in words(it["title"]) - GENERIC:
+            names.setdefault(w, {})
+            names[w][sec] = names[w].get(sec, 0) + 1
+    adopted = 0
+    for it in pending:
+        tally = {}
+        for w in words(it["title"]) - GENERIC:
+            for sec, n in names.get(w, {}).items():
+                if n >= 2:
+                    tally[sec] = tally.get(sec, 0) + n
+        ranked = sorted(tally.items(), key=lambda kv: -kv[1])
+        if not ranked or (len(ranked) > 1 and ranked[0][1] == ranked[1][1]):
+            dropped += 1
+            continue
+        it["section"] = ranked[0][0]
+        rate(it)
+        fresh.append(it)
+        adopted += 1
+    if adopted:
+        print(f"Placed {adopted} headline(s) by name against the rest of the batch.")
 
     if dropped:
         print(f"Filtered out {dropped} non-football headlines.")
@@ -579,6 +618,14 @@ def curate(items, cfg, pinned):
     # nothing about being women's football ("Pina hits four as Barcelona score seven").
     womens_roots = {find(i) for i, it in enumerate(fresh) if it.get("womens")}
 
+    # How many different outlets are telling this story. Breadth of coverage is the
+    # closest thing a wire of 46 feeds has to an editor's judgement: six outlets on a
+    # sacking is the lead, one outlet on a feature is not. Distinct sources, not items --
+    # counting items would let one prolific blog manufacture a lead out of nothing.
+    breadth = {}
+    for i, it in enumerate(fresh):
+        breadth.setdefault(find(i), set()).add((it.get("source") or "").strip().lower())
+
     kept, seen_root = [], set()
     for i, it in enumerate(fresh):  # score-sorted, so the first of a cluster is the best
         root = find(i)
@@ -587,6 +634,7 @@ def curate(items, cfg, pinned):
         seen_root.add(root)
         if womens_section and root in womens_roots:
             it["section"] = womens_section
+        it["breadth"] = len(breadth.get(root, ()))
         kept.append(it)
     if len(fresh) != len(kept):
         print(f"Merged {len(fresh) - len(kept)} duplicate retellings.")
@@ -596,11 +644,16 @@ def curate(items, cfg, pinned):
     if lead_pin.get("title") and lead_pin.get("url"):
         lead = {"title": lead_pin["title"], "url": lead_pin["url"], "image": None, "source": "", "hot": True}
     else:
-        # no image preference: publishers' photos are not ours to display, so the
-        # lead is simply the strongest story (see render() -- images are not emitted)
-        # ...but not behind a paywall if anything else is available: the lede is the
-        # biggest click target on the page and a wall there is the worst first impression
-        lead = next((k for k in kept if not k.get("paywall")), kept[0] if kept else None)
+        # no image preference: publishers' photos are not ours to display (see render()
+        # -- images are not emitted), and not behind a paywall if anything else is
+        # available: the lede is the biggest click target on the page and a wall there is
+        # the worst first impression.
+        # The lead is the most widely covered story, not the best-scoring single headline.
+        # Score knows which outlet filed and how recently; it has no idea what the day's
+        # story is, which is how a Barcelona feature came to sit above a Manchester United
+        # sacking. Breadth first, score to break the tie.
+        choices = [k for k in kept if not k.get("paywall")] or kept
+        lead = max(choices, key=lambda k: (k.get("breadth", 1), k["score"])) if choices else None
     if lead in kept:
         kept.remove(lead)
 
@@ -608,10 +661,12 @@ def curate(items, cfg, pinned):
     top = [{"title": t["title"], "url": t["url"], "hot": t.get("hot", False), "source": "",
             "paywall": t.get("paywall", False)}
            for t in pinned.get("top", []) if t.get("title") and t.get("url")]
-    for k in kept:
+    # The band above the masthead follows the lead's logic: widely covered first. A story
+    # three outlets are chasing earns its place there even from a low-priority feed.
+    for k in sorted(kept, key=lambda x: (-x.get("breadth", 1), -x["score"])):
         if len(top) >= n_top:
             break
-        if k["hot"] or k["priority"] >= 2:
+        if k["hot"] or k["priority"] >= 2 or k.get("breadth", 1) >= 3:
             top.append(k)
     kept = [k for k in kept if k not in top]
 
