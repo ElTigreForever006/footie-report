@@ -2,17 +2,19 @@ name: Build & deploy headlines
 
 on:
   schedule:
-    # Not */30: that fires at :00 and :30, two of the busiest minutes on GitHub,
-    # where scheduled runs get queued behind everyone else's and dropped. Odd
-    # minutes are far less contended. Scheduled runs are best-effort either way,
-    # so the page shows its real build time rather than a promise.
+    # Not */15: that fires at :00, :15, :30 and :45, the four busiest minutes on
+    # GitHub, where scheduled runs get queued behind everyone else's and dropped.
+    # Odd minutes are far less contended. Scheduled runs are best-effort either
+    # way, so the page shows its real build time rather than a promise.
     #
-    # Down from four an hour to two. Asking for 96 runs a day was returning about
-    # four -- GitHub deprioritises heavily-scheduled workflows, so the open question
-    # is whether the cap is absolute or a function of how often we ask. If delivery
-    # holds at ~4/day on half the requests the cap is absolute and this changes
-    # nothing; if it climbs, asking less often is worth more than asking more.
-    - cron: "7,37 * * * *"
+    # Measured, 17-18 Nov: asking twice an hour instead of four times produced
+    # FEWER builds -- 2.9 a day against 3.6, mean gap 8.0h against 6.7h. Asking
+    # less often is not the lever, so this is restored to four an hour. The hit
+    # rate per request did roughly double (3.8% -> 6.3%), so delivery is neither
+    # a fixed ceiling nor a flat fraction of what we ask for; but builds per day
+    # is the number a reader feels, and it fell. See the scheduler probes for the
+    # remaining question: whether the ration is per repository or per workflow.
+    - cron: "7,22,37,52 * * * *"
   push:
     branches: [main]         # rebuild immediately when you edit pinned.json or config.json
   workflow_dispatch: {}      # "Run workflow" button for manual refresh

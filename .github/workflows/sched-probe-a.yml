@@ -1,0 +1,29 @@
+name: Scheduler probe A
+
+# Not a build. This exists to answer one question: does GitHub ration scheduled runs
+# per repository, or per workflow?
+#
+# The site's own schedule asks for 96 runs a day and lands about four. Asking less
+# often was tried and made it worse. The remaining free hypothesis is that the ration
+# is per workflow -- in which case splitting the build across several workflow files
+# multiplies the real cadence, and in which case this probe, asking at exactly the
+# same rate as build.yml from a file of its own, will fire far more often than the
+# build does. If it fires about as rarely, the ration is per repository and no amount
+# of rescheduling will ever help; the trigger has to come from outside GitHub.
+#
+# Deliberately does no work and holds no permissions, so it cannot touch the site or
+# its deployment. Delete both probes once the question is answered.
+
+on:
+  schedule:
+    - cron: "3,18,33,48 * * * *"
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Record that the scheduler fired
+        run: echo "Probe A fired at $(date -u +%FT%TZ)"
